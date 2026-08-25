@@ -2,6 +2,7 @@
 1차 착수 범위: 메인페이지(목록) + 상세페이지만 동작하면 되므로 plants 테이블 하나만 다룬다."""
 import os
 
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,7 +47,7 @@ app = FastAPI(title="NEMONE PLANTS API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "https://plants.nemoneai.com"],
     allow_methods=["GET"],
     allow_headers=["*"],
 )
@@ -108,3 +109,7 @@ def get_plant(slug: str):
         return _detail(plant)
     finally:
         db.close()
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
