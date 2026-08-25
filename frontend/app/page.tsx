@@ -8,11 +8,28 @@ const SUNLIGHT_LABEL: Record<string, string> = {
   full_shade: "음지",
 };
 
+const SITE_URL = "https://plants.nemoneai.com";
+
 export default async function Home() {
   const plants = await getPlants();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: plants.map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE_URL}/plants/${p.slug}`,
+      name: p.name_kr,
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="bg-plant-primary text-white">
         <div className="max-w-5xl mx-auto px-6 py-10">
           <p className="text-sm tracking-wide text-plant-secondary uppercase mb-2">NEMONE PLANTS</p>

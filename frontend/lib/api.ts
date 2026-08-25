@@ -10,6 +10,7 @@ export interface PlantSummary {
   sunlight: string | null;
   watering_level: string | null;
   image_urls: string[] | null;
+  updated_at: string | null;
 }
 
 export interface PlantDetail extends PlantSummary {

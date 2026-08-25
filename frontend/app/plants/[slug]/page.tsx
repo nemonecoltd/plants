@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
 import { getPlant } from "@/lib/api";
+
+const SITE_URL = "https://plants.nemoneai.com";
 
 const SUNLIGHT_LABEL: Record<string, string> = {
   full_sun: "양지",
@@ -19,6 +22,38 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// description이 없는(아직 관리정보가 안 채워진) 항목도 최소한의 고유한 메타디스크립션을
+// 갖도록 케어 요약 문장으로 폴백 — 전 페이지 description이 똑같으면 중복 콘텐츠로 잡힘.
+function buildDescription(plant: NonNullable<Awaited<ReturnType<typeof getPlant>>>): string {
+  if (plant.description) return plant.description.slice(0, 150);
+  const facts: string[] = [];
+  if (plant.sunlight) facts.push(`${SUNLIGHT_LABEL[plant.sunlight] ?? plant.sunlight} 선호`);
+  if (plant.watering_level) facts.push(`물주기 ${WATERING_LABEL[plant.watering_level] ?? plant.watering_level}`);
+  if (plant.difficulty) facts.push(`난이도 ${plant.difficulty}`);
+  const suffix = facts.length ? facts.join(" · ") : "정확한 학명·분류 정보";
+  return `${plant.name_kr}(${plant.scientific_name ?? plant.name_en ?? ""}) 키우는 법 — ${suffix}.`;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const plant = await getPlant(slug);
+  if (!plant) {
+    return { title: "식물 정보" };
+  }
+
+  const label = plant.name_en ? `${plant.name_kr}(${plant.name_en})` : plant.name_kr;
+  const title = `${label} 키우는 법 · 특징`;
+  const description = buildDescription(plant);
+  const url = `${SITE_URL}/plants/${slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: "article", locale: "ko_KR", siteName: "NEMONE PLANTS" },
+  };
+}
+
 export default async function PlantDetailPage({ params }: Props) {
   const { slug } = await params;
   const plant = await getPlant(slug);
@@ -27,8 +62,28 @@ export default async function PlantDetailPage({ params }: Props) {
     notFound();
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: `${plant.name_kr} 키우는 법 · 특징`,
+    description: buildDescription(plant),
+    mainEntityOfPage: `${SITE_URL}/plants/${slug}`,
+    about: {
+      "@type": "Taxon",
+      name: plant.name_kr,
+      alternateName: plant.name_en ?? undefined,
+      scientificName: plant.scientific_name ?? undefined,
+    },
+    author: { "@type": "Organization", name: "NEMONE PLANTS", url: SITE_URL },
+    publisher: { "@type": "Organization", name: "NEMONE PLANTS", url: SITE_URL },
+  };
+
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="bg-plant-primary text-white">
         <div className="max-w-3xl mx-auto px-6 py-6">
           <Link href="/" className="text-white/70 text-xs no-underline hover:text-white">
