@@ -1,8 +1,14 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function AdBanner({ dataAdSlot }: { dataAdSlot: string }) {
+  const insRef = useRef<HTMLModElement>(null);
+
   useEffect(() => {
+    // 개발 모드 React StrictMode가 마운트를 두 번 실행하면서 같은 <ins>에
+    // push()가 중복 호출돼 "already have ads in them" 에러가 나던 문제 —
+    // 이미 초기화된(status 속성이 붙은) ins면 다시 push하지 않도록 가드.
+    if (insRef.current?.getAttribute("data-adsbygoogle-status")) return;
     try {
       // @ts-expect-error adsbygoogle는 외부 스크립트가 주입하는 전역
       (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -16,6 +22,7 @@ export default function AdBanner({ dataAdSlot }: { dataAdSlot: string }) {
   return (
     <div className="w-full overflow-hidden">
       <ins
+        ref={insRef}
         className="adsbygoogle"
         style={{ display: "block" }}
         data-ad-client="ca-pub-4274957638983041"

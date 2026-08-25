@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
 import { getPlant } from "@/lib/api";
+import { getPlaceholderImage } from "@/lib/placeholderImages";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
@@ -62,6 +64,8 @@ export default async function PlantDetailPage({ params }: Props) {
     notFound();
   }
 
+  const image = getPlaceholderImage(plant.slug);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -89,7 +93,13 @@ export default async function PlantDetailPage({ params }: Props) {
           ← 전체 식물 목록
         </Link>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          {image && (
+            <div className="relative aspect-[16/9]">
+              <Image src={image} alt={plant.name_kr} fill className="object-cover" priority />
+            </div>
+          )}
+          <div className="p-6">
           <div className="text-xs text-plant-secondary mb-1">{plant.category}</div>
           <h1 className="text-2xl font-bold text-plant-primary mb-1">{plant.name_kr}</h1>
           {(plant.name_en || plant.scientific_name) && (
@@ -128,6 +138,7 @@ export default async function PlantDetailPage({ params }: Props) {
               {plant.description}
             </p>
           )}
+          </div>
         </div>
 
         <div className="mt-6">
