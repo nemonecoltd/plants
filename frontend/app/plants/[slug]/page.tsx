@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AdBanner from "@/components/AdBanner";
 import { getPlant } from "@/lib/api";
 
 const SUNLIGHT_LABEL: Record<string, string> = {
@@ -76,6 +77,10 @@ export default async function PlantDetailPage({ params }: Props) {
               {plant.description}
             </p>
           )}
+        </div>
+
+        <div className="mt-6">
+          <AdBanner dataAdSlot="6819394440" />
         </div>
       </main>
     </div>
