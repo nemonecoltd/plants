@@ -84,15 +84,11 @@ export default async function PlantDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <header className="bg-plant-primary text-white">
-        <div className="max-w-3xl mx-auto px-6 py-6">
-          <Link href="/" className="text-white/70 text-xs no-underline hover:text-white">
-            ← 전체 식물 목록
-          </Link>
-        </div>
-      </header>
-
       <main className="max-w-3xl mx-auto px-6 py-8">
+        <Link href="/" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
+          ← 전체 식물 목록
+        </Link>
+
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="text-xs text-plant-secondary mb-1">{plant.category}</div>
           <h1 className="text-2xl font-bold text-plant-primary mb-1">{plant.name_kr}</h1>

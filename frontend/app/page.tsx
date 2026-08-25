@@ -30,13 +30,12 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <header className="bg-plant-primary text-white">
+      <section className="bg-plant-primary text-white">
         <div className="max-w-5xl mx-auto px-6 py-10">
-          <p className="text-sm tracking-wide text-plant-secondary uppercase mb-2">NEMONE PLANTS</p>
           <h1 className="text-3xl font-bold mb-2">식물도감 &amp; 케어 가이드</h1>
           <p className="text-white/80 text-sm">계절과 지역에 맞는 식물을 찾고, 정확한 관리법을 확인하세요.</p>
         </div>
-      </header>
+      </section>
 
       <main className="max-w-5xl mx-auto px-6 py-10">
         <h2 className="text-lg font-bold text-plant-primary mb-4">전체 식물 ({plants.length})</h2>
