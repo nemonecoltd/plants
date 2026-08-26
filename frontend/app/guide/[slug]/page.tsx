@@ -104,6 +104,12 @@ export default async function GuideDetailPage({ params }: Props) {
                 dangerouslySetInnerHTML={{ __html: spaceOutGuideBody(guide.body) }}
               />
             )}
+
+            {guide.source === "nongsaro" && (
+              <p className="text-[11px] text-gray-400 text-right mt-3">
+                {"<출처 : 농사로(농촌진흥청) 제공>"}
+              </p>
+            )}
           </div>
         </div>
 

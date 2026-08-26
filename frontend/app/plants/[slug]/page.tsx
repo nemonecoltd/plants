@@ -148,6 +148,12 @@ export default async function PlantDetailPage({ params }: Props) {
               {plant.description}
             </p>
           )}
+
+          {plant.source === "nongsaro" && (
+            <p className="text-[11px] text-gray-400 text-right mt-3">
+              {"<출처 : 농사로(농촌진흥청) 제공>"}
+            </p>
+          )}
           </div>
         </div>
 
