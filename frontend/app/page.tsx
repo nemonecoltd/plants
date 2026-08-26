@@ -1,14 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import AdBanner from "@/components/AdBanner";
+import PlantGrid from "@/components/PlantGrid";
 import { getPlants } from "@/lib/api";
-import { getPlantImage, HERO_IMAGE } from "@/lib/placeholderImages";
-
-const SUNLIGHT_LABEL: Record<string, string> = {
-  full_sun: "양지",
-  part_shade: "반음지",
-  full_shade: "음지",
-};
+import { HERO_IMAGE } from "@/lib/placeholderImages";
 
 const SITE_URL = "https://plants.nemoneai.com";
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -17,6 +11,10 @@ export default async function Home() {
   const plants = await getPlants();
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
+
+  // 지금은 "개화 시기"에 이번 달이 포함된 식물만 정직하게 보여줌 — 데이터가 아직 많지 않아
+  // 억지로 채우기보다 실제로 맞는 것만 노출(적으면 적은 대로, 아래 전체보기로 유도)
+  const monthlyPlants = plants.filter((p) => p.bloom_months?.includes(currentMonth));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -76,7 +74,7 @@ export default async function Home() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
               <h2 className="text-sm font-bold text-plant-primary">월별 추천 식물</h2>
-              <span className="text-[10px] text-gray-400">(준비 중)</span>
+              <span className="text-[10px] text-gray-400">(다른 달은 준비 중)</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {MONTHS.map((m) => (
@@ -102,74 +100,44 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ── 카테고리 태그 (실제 데이터 기반, 그리드로 스크롤) ── */}
+        {/* ── 카테고리 태그 (실제 데이터 기반, /plants로 연결) ── */}
         {categories.length > 0 && (
           <section className="pb-6">
             <div className="flex flex-wrap gap-2">
               {categories.map((c) => (
-                <a
+                <Link
                   key={c}
-                  href="#grid"
+                  href="/plants"
                   className="text-xs px-3 py-1.5 rounded-full bg-plant-secondary/15 text-plant-primary font-medium no-underline hover:bg-plant-secondary/25 transition-colors"
                 >
                   #{c}
-                </a>
+                </Link>
               ))}
             </div>
           </section>
         )}
 
-        {/* ── 식물 그리드 ── */}
-        <section id="grid" className="py-4 scroll-mt-20">
-          <h2 className="text-lg font-bold text-plant-primary mb-4">전체 식물 ({plants.length})</h2>
-
-          {plants.length === 0 ? (
-            <p className="text-gray-500 text-sm">등록된 식물이 없습니다.</p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {plants.map((p) => {
-                const img = getPlantImage(p);
-                return (
-                  <Link
-                    key={p.slug}
-                    href={`/plants/${p.slug}`}
-                    className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
-                  >
-                    <div className="relative aspect-[4/3] bg-plant-secondary/10">
-                      {img ? (
-                        <Image src={img} alt={p.name_kr} fill className="object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-plant-secondary/40 text-[11px]">
-                          이미지 준비 중
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <div className="text-[11px] text-plant-secondary mb-1">{p.category}</div>
-                      <div className="font-bold text-plant-primary mb-1">{p.name_kr}</div>
-                      {p.name_en && <div className="text-[11px] text-gray-400 italic mb-2">{p.name_en}</div>}
-                      <div className="flex flex-wrap gap-1">
-                        {p.sunlight && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-plant-secondary/15 text-plant-primary">
-                            {SUNLIGHT_LABEL[p.sunlight] ?? p.sunlight}
-                          </span>
-                        )}
-                        {p.difficulty && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-plant-secondary/15 text-plant-primary">
-                            난이도 {p.difficulty}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="mt-10">
-            <AdBanner dataAdSlot="6819394440" />
+        {/* ── 이번 달 개화 식물 ── */}
+        <section className="py-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-plant-primary">
+              {currentMonth}월 개화 식물 ({monthlyPlants.length})
+            </h2>
+            <Link href="/plants" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
+              전체 식물도감 보기 ({plants.length}) →
+            </Link>
           </div>
+
+          {monthlyPlants.length === 0 ? (
+            <p className="text-gray-500 text-sm">
+              이번 달 개화 정보가 확인된 식물이 아직 없어요.{" "}
+              <Link href="/plants" className="text-plant-primary underline">
+                전체 식물 보러가기
+              </Link>
+            </p>
+          ) : (
+            <PlantGrid plants={monthlyPlants} />
+          )}
         </section>
 
         {/* ── 가드닝팁 미리보기 (준비 중) ── */}

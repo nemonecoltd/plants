@@ -72,6 +72,7 @@ def _summary(p: Plant) -> dict:
         "sunlight": p.sunlight,
         "watering_level": p.watering_level,
         "image_urls": p.image_urls,
+        "bloom_months": p.bloom_months,
         "updated_at": p.updated_at.isoformat() if p.updated_at else None,
     }
 

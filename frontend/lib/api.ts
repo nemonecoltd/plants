@@ -10,13 +10,13 @@ export interface PlantSummary {
   sunlight: string | null;
   watering_level: string | null;
   image_urls: string[] | null;
+  bloom_months: number[] | null;
   updated_at: string | null;
 }
 
 export interface PlantDetail extends PlantSummary {
   scientific_name: string | null;
   planting_months: number[] | null;
-  bloom_months: number[] | null;
   soil_type: string[] | null;
   hardiness_zone: number | null;
   min_temp_c: number | null;
