@@ -28,6 +28,7 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
+  verification: { other: { "naver-site-verification": "07b17af7644b14ef24ad23f62e9cdac52803007b" } },
   icons: {
     icon: [
       { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
