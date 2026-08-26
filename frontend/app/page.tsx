@@ -1,14 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import PlantGrid from "@/components/PlantGrid";
-import { getPlants } from "@/lib/api";
+import { getGuides, getPlants } from "@/lib/api";
 import { HERO_IMAGE } from "@/lib/placeholderImages";
 
 const SITE_URL = "https://plants.nemoneai.com";
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 export default async function Home() {
-  const plants = await getPlants();
+  const [plants, guides] = await Promise.all([getPlants(), getGuides()]);
+  const recentGuides = guides.slice(0, 3);
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
 
@@ -140,23 +141,41 @@ export default async function Home() {
           )}
         </section>
 
-        {/* ── 가드닝팁 미리보기 (준비 중) ── */}
+        {/* ── 가드닝팁 미리보기 ── */}
         <section className="py-10 border-t border-gray-200 mt-4">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-plant-primary">가드닝팁</h2>
-            <span className="text-[10px] text-gray-400">(콘텐츠 준비 중)</span>
+            <Link href="/guide" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
+              전체보기 ({guides.length}) →
+            </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-dashed border-gray-300 bg-white p-5 flex flex-col items-center justify-center gap-2 h-32 text-gray-300"
-              >
-                <LeafIcon />
-                <span className="text-[11px]">가드닝 콘텐츠가 곧 채워질 자리예요</span>
-              </div>
-            ))}
-          </div>
+          {recentGuides.length === 0 ? (
+            <p className="text-gray-500 text-sm">등록된 가드닝팁이 없습니다.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {recentGuides.map((g) => (
+                <Link
+                  key={g.slug}
+                  href={`/guide/${g.slug}`}
+                  className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
+                >
+                  <div className="relative aspect-[4/3] bg-plant-secondary/10">
+                    {g.thumbnail_url ? (
+                      <Image src={g.thumbnail_url} alt={g.title} fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-plant-secondary/40 text-[11px]">
+                        이미지 준비 중
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    {g.category && <div className="text-[10px] text-plant-secondary mb-1">{g.category}</div>}
+                    <div className="font-bold text-plant-primary text-sm leading-snug line-clamp-2">{g.title}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* ── 회원가입 유도 CTA (준비 중) ── */}
@@ -177,15 +196,6 @@ function SearchIcon() {
     <svg viewBox="0 0 24 24" className="w-4 h-4" style={{ stroke: "currentColor", strokeWidth: 2, fill: "none" }}>
       <circle cx="11" cy="11" r="7" />
       <line x1="16.5" y1="16.5" x2="22" y2="22" />
-    </svg>
-  );
-}
-
-function LeafIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-6 h-6" style={{ stroke: "currentColor", strokeWidth: 1.5, fill: "none" }}>
-      <path d="M12 21c-4-2-7-6-7-11a8 8 0 0 1 14-5c1 5-2 9-6 11z" />
-      <path d="M12 21V9" />
     </svg>
   );
 }

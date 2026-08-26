@@ -18,6 +18,24 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+class Guide(Base):
+    __tablename__ = "guides"
+
+    id = Column(Integer, primary_key=True)
+    slug = Column(String, unique=True, nullable=False)
+    title = Column(String, nullable=False)
+    category = Column(String)
+    summary = Column(Text)
+    materials = Column(Text)
+    thumbnail_url = Column(String)
+    image_urls = Column(ARRAY(String))
+    body = Column(Text)
+    published_at = Column(DateTime(timezone=True))
+    source = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Plant(Base):
     __tablename__ = "plants"
 
@@ -109,6 +127,49 @@ def get_plant(slug: str):
         if not plant:
             raise HTTPException(status_code=404, detail="식물을 찾을 수 없습니다")
         return _detail(plant)
+    finally:
+        db.close()
+
+
+def _guide_summary(g: Guide) -> dict:
+    return {
+        "slug": g.slug,
+        "title": g.title,
+        "category": g.category,
+        "summary": g.summary,
+        "thumbnail_url": g.thumbnail_url,
+        "published_at": g.published_at.isoformat() if g.published_at else None,
+    }
+
+
+def _guide_detail(g: Guide) -> dict:
+    return {
+        **_guide_summary(g),
+        "materials": g.materials,
+        "image_urls": g.image_urls,
+        "body": g.body,
+        "source": g.source,
+    }
+
+
+@app.get("/api/guides")
+def list_guides():
+    db = SessionLocal()
+    try:
+        guides = db.query(Guide).order_by(Guide.published_at.desc().nullslast()).all()
+        return {"items": [_guide_summary(g) for g in guides]}
+    finally:
+        db.close()
+
+
+@app.get("/api/guides/{slug}")
+def get_guide(slug: str):
+    db = SessionLocal()
+    try:
+        guide = db.query(Guide).filter(Guide.slug == slug).first()
+        if not guide:
+            raise HTTPException(status_code=404, detail="가드닝팁을 찾을 수 없습니다")
+        return _guide_detail(guide)
     finally:
         db.close()
 

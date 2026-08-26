@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   images: {
     // 농사로(농촌진흥청) API가 주는 실제 식물 사진이 이 도메인에서 옴(영구 URL, 만료 없음)
-    remotePatterns: [{ protocol: "https", hostname: "nongsaro.go.kr" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "nongsaro.go.kr" },
+      { protocol: "https", hostname: "www.nongsaro.go.kr" },
+    ],
   },
 };
 

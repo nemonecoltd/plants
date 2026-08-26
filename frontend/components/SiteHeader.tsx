@@ -4,7 +4,7 @@ import Link from "next/link";
 const NAV_LINKS = [
   { label: "홈", href: "/", enabled: true },
   { label: "전체 식물", href: "/plants", enabled: true },
-  { label: "가드닝팁", href: "/guide", enabled: false },
+  { label: "가드닝팁", href: "/guide", enabled: true },
   { label: "마이가든", href: "/my-garden", enabled: false },
 ] as const;
 

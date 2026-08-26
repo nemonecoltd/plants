@@ -44,3 +44,28 @@ export async function getPlants(): Promise<PlantSummary[]> {
 export async function getPlant(slug: string): Promise<PlantDetail | null> {
   return fetchApi<PlantDetail>(`/api/plants/${slug}`);
 }
+
+export interface GuideSummary {
+  slug: string;
+  title: string;
+  category: string | null;
+  summary: string | null;
+  thumbnail_url: string | null;
+  published_at: string | null;
+}
+
+export interface GuideDetail extends GuideSummary {
+  materials: string | null;
+  image_urls: string[] | null;
+  body: string | null;
+  source: string | null;
+}
+
+export async function getGuides(): Promise<GuideSummary[]> {
+  const data = await fetchApi<{ items: GuideSummary[] }>("/api/guides");
+  return data?.items ?? [];
+}
+
+export async function getGuide(slug: string): Promise<GuideDetail | null> {
+  return fetchApi<GuideDetail>(`/api/guides/${slug}`);
+}
