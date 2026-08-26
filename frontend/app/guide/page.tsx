@@ -38,19 +38,13 @@ function GuideCard({ guide }: { guide: GuideSummary }) {
 export default async function GuidePage() {
   const guides = await getGuides();
 
+  // 4장 다음에 넣으면 PC(4열)는 2번째 줄, 모바일(2열)은 3번째 줄이 된다(PlantGrid와 동일 근거).
   const nodes: ReactNode[] = [];
   guides.forEach((g, i) => {
     nodes.push(<GuideCard key={g.slug} guide={g} />);
-    if (i + 1 === 6) {
+    if (i + 1 === 4) {
       nodes.push(
-        <div key="ad-mobile" className="col-span-full md:hidden">
-          <AdBanner dataAdSlot="6819394440" />
-        </div>
-      );
-    }
-    if (i + 1 === 8) {
-      nodes.push(
-        <div key="ad-desktop" className="col-span-full hidden md:block">
+        <div key="ad" className="col-span-full">
           <AdBanner dataAdSlot="6819394440" />
         </div>
       );

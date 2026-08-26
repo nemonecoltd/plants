@@ -47,7 +47,7 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-plant-primary/90 via-plant-primary/70 to-plant-primary/40" />
 
-        <div className="relative max-w-5xl mx-auto px-6 py-14 sm:py-20 text-white">
+        <div className="relative max-w-5xl mx-auto px-6 py-11 sm:py-16 text-white">
           <p className="text-xs tracking-[0.2em] uppercase text-white/70 mb-3">Plant Encyclopedia</p>
           <h1 className="text-3xl sm:text-4xl font-bold mb-3">식물도감 &amp; 케어 가이드</h1>
           <p className="text-white/85 text-sm sm:text-base mb-8">
