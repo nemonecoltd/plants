@@ -47,12 +47,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${label} 키우는 법 · 특징`;
   const description = buildDescription(plant);
   const url = `${SITE_URL}/plants/${slug}`;
+  const image = getPlantImage(plant);
 
   return {
     title,
     description,
     alternates: { canonical: url },
-    openGraph: { title, description, url, type: "article", locale: "ko_KR", siteName: "NEMONE PLANTS" },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "article",
+      locale: "ko_KR",
+      siteName: "NEMONE PLANTS",
+      images: image ? [image] : undefined,
+    },
+    twitter: image ? { card: "summary_large_image", title, description, images: [image] } : undefined,
   };
 }
 

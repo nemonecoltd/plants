@@ -43,11 +43,13 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: `${SITE_NAME} | 식물도감 & 케어 가이드`,
     description: SITE_DESCRIPTION,
+    images: [{ url: "/images/plants/hero.jpg", width: 960, height: 640, alt: SITE_NAME }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: `${SITE_NAME} | 식물도감 & 케어 가이드`,
     description: SITE_DESCRIPTION,
+    images: ["/images/plants/hero.jpg"],
   },
 };
 

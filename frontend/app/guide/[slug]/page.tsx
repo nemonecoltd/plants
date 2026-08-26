@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "NEMONE PLANTS",
       images: guide.thumbnail_url ? [guide.thumbnail_url] : undefined,
     },
+    twitter: guide.thumbnail_url
+      ? { card: "summary_large_image", title: guide.title, description, images: [guide.thumbnail_url] }
+      : undefined,
   };
 }
 
