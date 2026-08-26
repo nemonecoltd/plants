@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
 import { getPlants } from "@/lib/api";
-import { getPlaceholderImage, HERO_IMAGE } from "@/lib/placeholderImages";
+import { getPlantImage, HERO_IMAGE } from "@/lib/placeholderImages";
 
 const SUNLIGHT_LABEL: Record<string, string> = {
   full_sun: "양지",
@@ -128,7 +128,7 @@ export default async function Home() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {plants.map((p) => {
-                const img = getPlaceholderImage(p.slug);
+                const img = getPlantImage(p);
                 return (
                   <Link
                     key={p.slug}

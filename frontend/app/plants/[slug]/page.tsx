@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
 import { getPlant } from "@/lib/api";
-import { getPlaceholderImage } from "@/lib/placeholderImages";
+import { getPlantImage } from "@/lib/placeholderImages";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
@@ -64,7 +64,7 @@ export default async function PlantDetailPage({ params }: Props) {
     notFound();
   }
 
-  const image = getPlaceholderImage(plant.slug);
+  const image = getPlantImage(plant);
 
   const jsonLd = {
     "@context": "https://schema.org",

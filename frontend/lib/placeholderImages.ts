@@ -29,4 +29,9 @@ export function getPlaceholderImage(slug: string): string | null {
   return PLACEHOLDER_IMAGES[slug] ?? null;
 }
 
+// DB에 실제 이미지(농사로 API 등)가 있으면 그걸 우선 쓰고, 없을 때만 임시 이미지로 폴백.
+export function getPlantImage(plant: { slug: string; image_urls?: string[] | null }): string | null {
+  return plant.image_urls?.[0] || getPlaceholderImage(plant.slug);
+}
+
 export const HERO_IMAGE = "/images/plants/hero.jpg";
