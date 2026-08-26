@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+import SearchBar from "@/components/SearchBar";
 
 const NAV_LINKS = [
   { label: "홈", href: "/", enabled: true },
@@ -29,19 +31,12 @@ export default function SiteHeader() {
           />
         </Link>
 
-        {/* 검색바 — 맛매치처럼 타이틀 중앙에 배치, 아직 실제 검색은 미연동(디자인 단계) */}
+        {/* 검색바 — 맛매치처럼 타이틀 중앙에 배치, 제출 시 /plants?q=...로 이동해 실제 검색 수행 */}
         <div className="flex-1 flex justify-center min-w-0">
-          <div className="flex items-center w-full max-w-[220px] sm:max-w-xs rounded-full bg-[#F4F6F4] border border-gray-200 overflow-hidden">
-            <input
-              type="text"
-              placeholder="식물 이름 검색 (준비 중)"
-              disabled
-              aria-disabled="true"
-              className="flex-1 min-w-0 bg-transparent px-4 py-1.5 text-xs text-gray-600 placeholder:text-gray-400 outline-none disabled:cursor-not-allowed"
-            />
-            <span className="flex items-center justify-center w-8 text-plant-secondary shrink-0">
-              <SearchIcon />
-            </span>
+          <div className="w-full max-w-[220px] sm:max-w-xs">
+            <Suspense fallback={<div className="h-8 rounded-full bg-[#F4F6F4] border border-gray-200" />}>
+              <SearchBar />
+            </Suspense>
           </div>
         </div>
 
@@ -88,15 +83,6 @@ export default function SiteHeader() {
         </p>
       </div>
     </header>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" style={{ stroke: "currentColor", strokeWidth: 2, fill: "none" }}>
-      <circle cx="11" cy="11" r="7" />
-      <line x1="16.5" y1="16.5" x2="22" y2="22" />
-    </svg>
   );
 }
 

@@ -1,23 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import GuideCard from "@/components/GuideCard";
-import PlantGrid from "@/components/PlantGrid";
+import MonthlyPlantSection from "@/components/MonthlyPlantSection";
 import { getGuides, getPlants } from "@/lib/api";
+import type { GuideSummary } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
-const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 export default async function Home() {
   const [plants, guides] = await Promise.all([getPlants(), getGuides()]);
   const recentGuides = guides.slice(0, 3);
-  // 상단 노출용 랜덤 5개 — 매 요청마다 다른 팁을 보여줘 반복 방문 시에도 신선하게 느껴지도록 함
-  const highlightGuides = [...guides].sort(() => Math.random() - 0.5).slice(0, 5);
+  // 상단 노출용 랜덤 3개(1개 크게 + 2개 가로) — 매 요청마다 다른 팁을 보여줘 반복 방문 시에도 신선하게 느껴지도록 함
+  const highlightGuides = [...guides].sort(() => Math.random() - 0.5).slice(0, 3);
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
-
-  // 지금은 "개화 시기"에 이번 달이 포함된 식물만 정직하게 보여줌 — 데이터가 아직 많지 않아
-  // 억지로 채우기보다 실제로 맞는 것만 노출(적으면 적은 대로, 아래 전체보기로 유도)
-  const monthlyPlants = plants.filter((p) => p.bloom_months?.includes(currentMonth));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -37,61 +33,34 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ── 페이지 타이틀 ── */}
-      <section className="max-w-5xl mx-auto px-6 pt-8 pb-2">
-        <h1 className="text-2xl sm:text-3xl font-bold text-plant-primary">식물도감 &amp; 케어 가이드</h1>
-      </section>
+      {/* 화면에는 안 보이지만 페이지 정체성을 위해 h1은 유지(SEO/접근성) */}
+      <h1 className="sr-only">식물도감 &amp; 케어 가이드</h1>
 
-      {/* ── 가드닝팁 하이라이트(랜덤 5개, 가로 카드) — 예전 이미지 히어로 자리 대체 ── */}
+      {/* ── 가드닝팁 하이라이트(랜덤 3개: 왼쪽 1개 크게 + 오른쪽 2개 가로) ── */}
       {highlightGuides.length > 0 && (
-        <section className="max-w-5xl mx-auto px-6 pb-6">
+        <section className="max-w-5xl mx-auto px-6 pt-8 pb-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold text-plant-primary">🌱 오늘의 가드닝팁</h2>
             <Link href="/guide" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
               전체보기 →
             </Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-1 -mx-6 px-6 sm:mx-0 sm:px-0">
-            {highlightGuides.map((g) => (
-              <div key={g.slug} className="flex-none w-40 sm:w-[calc((100%-4rem)/5)]">
-                <GuideCard guide={g} />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <HeroGuideCard guide={highlightGuides[0]} className="h-56 sm:h-72 sm:w-1/2" titleClassName="text-base sm:text-lg" />
+            {highlightGuides.length > 1 && (
+              <div className="flex gap-3 sm:w-1/2 h-40 sm:h-72">
+                {highlightGuides.slice(1, 3).map((g) => (
+                  <HeroGuideCard key={g.slug} guide={g} className="flex-1 h-full" titleClassName="text-xs sm:text-sm" />
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </section>
       )}
 
       <main className="max-w-5xl mx-auto px-6">
-        {/* ── 월별 퀵필터 + 지역 위젯 안내 ── */}
-        <section className="py-8 flex flex-col sm:flex-row sm:items-start gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-bold text-plant-primary">월별 추천 식물</h2>
-              <span className="text-[10px] text-gray-400">(다른 달은 준비 중)</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {MONTHS.map((m) => (
-                <span
-                  key={m}
-                  className={`text-xs px-3 py-1.5 rounded-full border select-none ${
-                    m === currentMonth
-                      ? "bg-plant-primary text-white border-plant-primary"
-                      : "bg-white text-gray-400 border-gray-200"
-                  }`}
-                >
-                  {m}월
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="w-full sm:w-56 shrink-0 bg-white rounded-lg border border-dashed border-gray-300 p-4">
-            <div className="text-[11px] font-bold text-gray-400 mb-1">📍 지역별 환경 정보</div>
-            <div className="text-[11px] text-gray-400 leading-relaxed">
-              내 위치의 기온·습도에 맞는 식물 추천 기능을 준비하고 있어요.
-            </div>
-          </div>
-        </section>
+        {/* ── 월별 퀵필터(실제 클릭 가능) + 이번 달 개화 식물 ── */}
+        <MonthlyPlantSection plants={plants} totalCount={plants.length} initialMonth={currentMonth} />
 
         {/* ── 카테고리 태그 (실제 데이터 기반, /plants로 연결) ── */}
         {categories.length > 0 && (
@@ -110,29 +79,6 @@ export default async function Home() {
           </section>
         )}
 
-        {/* ── 이번 달 개화 식물 ── */}
-        <section className="py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-plant-primary">
-              {currentMonth}월 개화 식물 ({monthlyPlants.length})
-            </h2>
-            <Link href="/plants" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
-              전체 식물도감 보기 ({plants.length}) →
-            </Link>
-          </div>
-
-          {monthlyPlants.length === 0 ? (
-            <p className="text-gray-500 text-sm">
-              이번 달 개화 정보가 확인된 식물이 아직 없어요.{" "}
-              <Link href="/plants" className="text-plant-primary underline">
-                전체 식물 보러가기
-              </Link>
-            </p>
-          ) : (
-            <PlantGrid plants={monthlyPlants} />
-          )}
-        </section>
-
         {/* ── 가드닝팁 미리보기 ── */}
         <section className="py-10 border-t border-gray-200 mt-4">
           <div className="flex items-center justify-between mb-4">
@@ -146,25 +92,7 @@ export default async function Home() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {recentGuides.map((g) => (
-                <Link
-                  key={g.slug}
-                  href={`/guide/${g.slug}`}
-                  className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
-                >
-                  <div className="relative aspect-[4/3] bg-plant-secondary/10">
-                    {g.thumbnail_url ? (
-                      <Image src={g.thumbnail_url} alt={g.title} fill className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-plant-secondary/40 text-[11px]">
-                        이미지 준비 중
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    {g.category && <div className="text-[10px] text-plant-secondary mb-1">{g.category}</div>}
-                    <div className="font-bold text-plant-primary text-sm leading-snug line-clamp-2">{g.title}</div>
-                  </div>
-                </Link>
+                <GuideCard key={g.slug} guide={g} />
               ))}
             </div>
           )}
@@ -180,5 +108,38 @@ export default async function Home() {
         </section>
       </main>
     </div>
+  );
+}
+
+function HeroGuideCard({
+  guide,
+  className,
+  titleClassName,
+}: {
+  guide: GuideSummary;
+  className: string;
+  titleClassName: string;
+}) {
+  return (
+    <Link
+      href={`/guide/${guide.slug}`}
+      className={`relative block rounded-lg overflow-hidden no-underline group ${className}`}
+    >
+      {guide.thumbnail_url ? (
+        <Image
+          src={guide.thumbnail_url}
+          alt={guide.title}
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-plant-secondary/20" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+        {guide.category && <div className="text-[10px] opacity-80 mb-0.5">{guide.category}</div>}
+        <div className={`font-bold leading-snug line-clamp-2 ${titleClassName}`}>{guide.title}</div>
+      </div>
+    </Link>
   );
 }
