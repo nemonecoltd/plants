@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import GuideCard from "@/components/GuideCard";
 import PlantGrid from "@/components/PlantGrid";
 import { getGuides, getPlants } from "@/lib/api";
-import { HERO_IMAGE } from "@/lib/placeholderImages";
 
 const SITE_URL = "https://plants.nemoneai.com";
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -10,6 +10,8 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 export default async function Home() {
   const [plants, guides] = await Promise.all([getPlants(), getGuides()]);
   const recentGuides = guides.slice(0, 3);
+  // 상단 노출용 랜덤 5개 — 매 요청마다 다른 팁을 보여줘 반복 방문 시에도 신선하게 느껴지도록 함
+  const highlightGuides = [...guides].sort(() => Math.random() - 0.5).slice(0, 5);
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
 
@@ -35,39 +37,29 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ── 히어로 ── */}
-      <section className="relative overflow-hidden">
-        <Image
-          src={HERO_IMAGE}
-          alt=""
-          fill
-          priority
-          className="object-cover"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-plant-primary/90 via-plant-primary/70 to-plant-primary/40" />
-
-        <div className="relative max-w-5xl mx-auto px-6 py-11 sm:py-16 text-white">
-          <p className="text-xs tracking-[0.2em] uppercase text-white/70 mb-3">Plant Encyclopedia</p>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3">식물도감 &amp; 케어 가이드</h1>
-          <p className="text-white/85 text-sm sm:text-base mb-8">
-            계절과 지역에 맞는 식물을 찾고, 정확한 학명·물주기·빛 정보를 확인하세요.
-          </p>
-
-          {/* 검색창 — 아직 실제 검색은 붙어있지 않은 디자인 단계 UI */}
-          <div className="flex max-w-md rounded-full bg-white overflow-hidden shadow-lg">
-            <input
-              type="text"
-              placeholder="식물 이름으로 검색 (준비 중)"
-              disabled
-              className="flex-1 px-5 py-3 text-sm text-gray-700 placeholder:text-gray-400 outline-none disabled:bg-white"
-            />
-            <span className="flex items-center justify-center w-12 text-plant-primary shrink-0">
-              <SearchIcon />
-            </span>
-          </div>
-        </div>
+      {/* ── 페이지 타이틀 ── */}
+      <section className="max-w-5xl mx-auto px-6 pt-8 pb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-plant-primary">식물도감 &amp; 케어 가이드</h1>
       </section>
+
+      {/* ── 가드닝팁 하이라이트(랜덤 5개, 가로 카드) — 예전 이미지 히어로 자리 대체 ── */}
+      {highlightGuides.length > 0 && (
+        <section className="max-w-5xl mx-auto px-6 pb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold text-plant-primary">🌱 오늘의 가드닝팁</h2>
+            <Link href="/guide" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
+              전체보기 →
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-1 -mx-6 px-6 sm:mx-0 sm:px-0">
+            {highlightGuides.map((g) => (
+              <div key={g.slug} className="flex-none w-40 sm:w-[calc((100%-4rem)/5)]">
+                <GuideCard guide={g} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <main className="max-w-5xl mx-auto px-6">
         {/* ── 월별 퀵필터 + 지역 위젯 안내 ── */}
@@ -188,14 +180,5 @@ export default async function Home() {
         </section>
       </main>
     </div>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-4 h-4" style={{ stroke: "currentColor", strokeWidth: 2, fill: "none" }}>
-      <circle cx="11" cy="11" r="7" />
-      <line x1="16.5" y1="16.5" x2="22" y2="22" />
-    </svg>
   );
 }

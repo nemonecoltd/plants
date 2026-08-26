@@ -14,7 +14,7 @@ export default function SiteFooter() {
             NEMONE PLANTS
           </span>
           <span className="text-[10px] font-bold text-gray-500 tracking-wide">
-            당신의 자연과의 교감을 설계합니다
+            초보집사의 성장을 응원합니다.
           </span>
           <span className="text-[9px] font-bold text-gray-400 tracking-widest uppercase mt-1">
             © NEMONE INC. ALL RIGHTS RESERVED.

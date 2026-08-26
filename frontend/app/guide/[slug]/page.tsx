@@ -11,6 +11,16 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// 농사로 원문 중 일부는 "1. ... 2. ... 3. ..." 단계가 줄바꿈 없이 한 문단에 다 붙어 있어
+// 읽기 힘든 경우가 있음 — 태그 경계가 아닌(=이미 줄이 나뉘어 있지 않은) 위치의 단계 번호/
+// 항목 기호 앞에만 줄바꿈을 넣어 보완. 이미 <p>로 잘 나뉜 원문은 매칭되지 않아 그대로 유지.
+function spaceOutGuideBody(html: string): string {
+  return html
+    .replace(/([^\s>])\s+(\d{1,2}\.\s)/g, "$1<br /><br />$2")
+    .replace(/([^\s>])\s+(※)/g, "$1<br /><br />$2")
+    .replace(/([^\s>])\s+(-\s*[가-힣]{1,4}\s*:)/g, "$1<br />$2");
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const guide = await getGuide(slug);
@@ -91,7 +101,7 @@ export default async function GuideDetailPage({ params }: Props) {
               // 농촌진흥청 공식 API가 주는 신뢰된 HTML(사용자 입력 아님) — 단계별 설명 마크업 그대로 렌더링
               <div
                 className="text-sm text-gray-700 leading-relaxed [&_p]:mb-2 [&_img]:rounded [&_img]:my-3 [&_img]:max-w-full"
-                dangerouslySetInnerHTML={{ __html: guide.body }}
+                dangerouslySetInnerHTML={{ __html: spaceOutGuideBody(guide.body) }}
               />
             )}
           </div>
