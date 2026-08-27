@@ -49,9 +49,35 @@ def extract_items(xml: str) -> list[str]:
     return re.findall(r"<item>(.*?)</item>", xml, re.S)
 
 
-def first_image(html: str) -> str | None:
-    m = re.search(r'<img[^>]+src="([^"]+)"', html)
-    return m.group(1).replace("http://", "https://") if m else None
+def pick_thumbnail(html: str) -> str | None:
+    """맨 처음 이미지는 대개 재배 캘린더 같은 글자 위주 도표라 카드로 잘라내면
+    읽을 수 없게 되는 경우가 많음 — alt에 "사진"이 들어간(실물 사진) 이미지를
+    우선하고, 없으면 마지막 이미지(보통 마무리에 붙는 완성 사진)를 씀."""
+    imgs = re.findall(r"<img([^>]*)>", html)
+    candidates: list[tuple[str, str]] = []
+    for attrs in imgs:
+        src_m = re.search(r'src="([^"]+)"', attrs)
+        if not src_m:
+            continue
+        alt_m = re.search(r'alt="([^"]*)"', attrs)
+        candidates.append((src_m.group(1), alt_m.group(1) if alt_m else ""))
+    if not candidates:
+        return None
+    photo = next((src for src, alt in candidates if "사진" in alt), None)
+    chosen = photo or candidates[-1][0]
+    return chosen.replace("http://", "https://")
+
+
+def is_thin_content(title: str, html: str) -> bool:
+    """일부 글은 API 응답(cn)에 실제 내용 없이 "첨부파일을 참고하세요"만 있고
+    진짜 내용은 첨부파일(API로 못 받아옴)에만 있음 — 이런 속 빈 글은 제외."""
+    stripped = re.sub(r"\s+", "", re.sub(r"<[^>]+>", "", html or ""))
+    stripped = stripped.replace(re.sub(r"\s+", "", title), "")
+    if len(stripped) < 50:
+        return True
+    if "첨부파일" in stripped and len(stripped) < 150:
+        return True
+    return False
 
 
 def parse_published_at(svc_dtx: str) -> datetime | None:
@@ -116,14 +142,18 @@ def run(budget: int | None) -> None:
             for it in items:
                 if not it["cntntsNo"] or not it["title"]:
                     continue
+                if is_thin_content(it["title"], it["body"]):
+                    print(f"skip(내용 부족): {it['title']}")
+                    continue
                 try:
                     slug = f"nongsaro-fm-{it['cntntsNo']}"
+                    thumb = pick_thumbnail(it["body"])
                     guide = {
                         "slug": slug,
                         "title": it["title"],
                         "category": category,
-                        "thumbnail_url": first_image(it["body"]),
-                        "image_urls": [first_image(it["body"])] if first_image(it["body"]) else [],
+                        "thumbnail_url": thumb,
+                        "image_urls": [thumb] if thumb else [],
                         "body": it["body"] or None,
                         "published_at": parse_published_at(it["svcDtx"]),
                     }
