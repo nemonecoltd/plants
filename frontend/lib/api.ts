@@ -21,6 +21,17 @@ export interface PlantDetail extends PlantSummary {
   hardiness_zone: number | null;
   min_temp_c: number | null;
   description: string | null;
+  family: string | null;
+  origin: string | null;
+  growth_form: string | null;
+  leaf_color: string[] | null;
+  flower_color: string[] | null;
+  fruit_color: string[] | null;
+  leaf_pattern: string | null;
+  leaf_style: string | null;
+  propagation_methods: string[] | null;
+  pests: string[] | null;
+  toxicity: string | null;
   source: string | null;
 }
 

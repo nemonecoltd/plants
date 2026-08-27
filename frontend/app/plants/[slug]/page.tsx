@@ -128,6 +128,16 @@ export default async function PlantDetailPage({ params }: Props) {
             </div>
           )}
 
+          {plant.toxicity && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg px-3 py-2.5 mb-5">
+              <span aria-hidden="true">⚠️</span>
+              <div className="text-[13px] leading-snug">
+                <span className="font-bold">독성 주의: </span>
+                {plant.toxicity} — 반려동물·아이가 있는 공간에서는 배치에 유의하세요.
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             <Stat label="난이도" value={plant.difficulty ?? "-"} />
             <Stat label="빛" value={plant.sunlight ? SUNLIGHT_LABEL[plant.sunlight] ?? plant.sunlight : "-"} />
@@ -141,7 +151,65 @@ export default async function PlantDetailPage({ params }: Props) {
               value={plant.bloom_months?.length ? plant.bloom_months.map(MONTH_LABEL).join(", ") : "-"}
             />
             <Stat label="최저 견딜 온도" value={plant.min_temp_c != null ? `${plant.min_temp_c}°C` : "-"} />
+            <Stat label="생육형태" value={plant.growth_form ?? "-"} />
+            <Stat label="과(科)" value={plant.family ?? "-"} />
+            <Stat label="원산지" value={plant.origin ?? "-"} />
           </div>
+
+          {(plant.leaf_color?.length || plant.flower_color?.length || plant.fruit_color?.length || plant.leaf_pattern) && (
+            <div className="mb-5">
+              <div className="text-[11px] font-bold text-gray-400 mb-1.5">외형 특징</div>
+              <div className="flex flex-wrap gap-1.5">
+                {plant.leaf_color?.map((c) => (
+                  <span key={`leaf-${c}`} className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                    잎 {c}
+                  </span>
+                ))}
+                {plant.flower_color?.map((c) => (
+                  <span key={`flower-${c}`} className="text-[11px] px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-100">
+                    꽃 {c}
+                  </span>
+                ))}
+                {plant.fruit_color?.map((c) => (
+                  <span key={`fruit-${c}`} className="text-[11px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100">
+                    열매 {c}
+                  </span>
+                ))}
+                {plant.leaf_pattern && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                    잎무늬 {plant.leaf_pattern}
+                  </span>
+                )}
+              </div>
+              {plant.leaf_style && <p className="text-[11px] text-gray-400 mt-1.5">{plant.leaf_style}</p>}
+            </div>
+          )}
+
+          {plant.propagation_methods && plant.propagation_methods.length > 0 && (
+            <div className="mb-5">
+              <div className="text-[11px] font-bold text-gray-400 mb-1.5">번식 방법</div>
+              <div className="flex flex-wrap gap-1.5">
+                {plant.propagation_methods.map((m) => (
+                  <span key={m} className="text-[11px] px-2 py-0.5 rounded-full bg-plant-secondary/15 text-plant-primary">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {plant.pests && plant.pests.length > 0 && (
+            <div className="mb-5">
+              <div className="text-[11px] font-bold text-gray-400 mb-1.5">주의할 병충해</div>
+              <div className="flex flex-wrap gap-1.5">
+                {plant.pests.map((p) => (
+                  <span key={p} className="text-[11px] px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {plant.description && (
             <p className="text-sm text-gray-700 leading-relaxed border-t border-gray-100 pt-4">
