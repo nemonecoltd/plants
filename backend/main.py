@@ -56,6 +56,17 @@ class Plant(Base):
     difficulty = Column(String)           # easy / medium / hard
     description = Column(Text)
     image_urls = Column(ARRAY(String))
+    family = Column(String)               # 과명(예: 진달래과)
+    origin = Column(String)               # 원산지
+    growth_form = Column(String)          # 생육형태(직립형/관목형/덩굴성 등)
+    leaf_color = Column(ARRAY(String))
+    flower_color = Column(ARRAY(String))
+    fruit_color = Column(ARRAY(String))
+    leaf_pattern = Column(String)
+    leaf_style = Column(String)           # 질감/광택/상록여부 등 서술형
+    propagation_methods = Column(ARRAY(String))
+    pests = Column(ARRAY(String))
+    toxicity = Column(Text)
     source = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -105,6 +116,17 @@ def _detail(p: Plant) -> dict:
         "hardiness_zone": p.hardiness_zone,
         "min_temp_c": p.min_temp_c,
         "description": p.description,
+        "family": p.family,
+        "origin": p.origin,
+        "growth_form": p.growth_form,
+        "leaf_color": p.leaf_color,
+        "flower_color": p.flower_color,
+        "fruit_color": p.fruit_color,
+        "leaf_pattern": p.leaf_pattern,
+        "leaf_style": p.leaf_style,
+        "propagation_methods": p.propagation_methods,
+        "pests": p.pests,
+        "toxicity": p.toxicity,
         "source": p.source,
     }
 

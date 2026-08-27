@@ -117,6 +117,10 @@ def parse_bloom_months(season_names: str) -> list[int]:
     return sorted(months)
 
 
+def split_list(value: str) -> list[str]:
+    return [v.strip() for v in re.split(r"[,·]", value) if v.strip()]
+
+
 def fetch_list(page: int, rows: int) -> list[dict]:
     xml = get_xml("gardenList", {"pageNo": page, "numOfRows": rows})
     results = []
@@ -143,7 +147,6 @@ def fetch_detail(cntnts_no: str) -> dict:
         g("watercycleAutumnCodeNm"), g("watercycleWinterCodeNm"),
     )
     tags = [t.strip() for t in g("adviseInfo").split(",") if t.strip()]
-    description_parts = [p for p in [g("fncltyInfo"), g("orgplceInfo") and f"원산지: {g('orgplceInfo')}"] if p]
 
     return {
         "name_en": g("plntzrNm") or None,
@@ -157,7 +160,20 @@ def fetch_detail(cntnts_no: str) -> dict:
         "soil_type": [g("soilInfo")] if g("soilInfo") else [],
         "min_temp_c": parse_min_temp(g("winterLwetTpCodeNm")),
         "difficulty": map_difficulty(g("managelevelCodeNm")),
-        "description": " / ".join(description_parts) or None,
+        "description": g("fncltyInfo") or None,
+        # 모두의농업(같은 농사로 데이터를 재노출하는 사이트) 비교로 발견한 추가 필드 —
+        # 초기 수집기가 케어 카드 6개 필드만 옮기고 누락했던 것을 보완(2026-08-27)
+        "family": g("fmlCodeNm") or None,
+        "origin": g("orgplceInfo") or None,
+        "growth_form": g("grwhstleCodeNm") or None,
+        "leaf_color": split_list(g("lefcolrCodeNm")),
+        "flower_color": split_list(g("flclrCodeNm")),
+        "fruit_color": split_list(g("fmldecolrCodeNm")),
+        "leaf_pattern": g("lefmrkCodeNm") or None,
+        "leaf_style": g("lefStleInfo") or None,
+        "propagation_methods": split_list(g("prpgtmthCodeNm")),
+        "pests": split_list(g("dlthtsCodeNm")),
+        "toxicity": g("toxctyInfo") or None,
     }
 
 
@@ -169,12 +185,16 @@ def upsert_plant(db, p: dict) -> None:
                 (slug, name_kr, name_en, scientific_name, category, tags,
                  planting_months, bloom_months, watering_level, sunlight,
                  soil_type, hardiness_zone, min_temp_c, difficulty,
-                 description, image_urls, source)
+                 description, image_urls, family, origin, growth_form,
+                 leaf_color, flower_color, fruit_color, leaf_pattern, leaf_style,
+                 propagation_methods, pests, toxicity, source)
             VALUES
                 (:slug, :name_kr, :name_en, :scientific_name, :category, :tags,
                  :planting_months, :bloom_months, :watering_level, :sunlight,
                  :soil_type, NULL, :min_temp_c, :difficulty,
-                 :description, :image_urls, 'nongsaro')
+                 :description, :image_urls, :family, :origin, :growth_form,
+                 :leaf_color, :flower_color, :fruit_color, :leaf_pattern, :leaf_style,
+                 :propagation_methods, :pests, :toxicity, 'nongsaro')
             ON CONFLICT (slug) DO UPDATE SET
                 name_kr = EXCLUDED.name_kr, name_en = EXCLUDED.name_en,
                 scientific_name = EXCLUDED.scientific_name, category = EXCLUDED.category,
@@ -183,6 +203,12 @@ def upsert_plant(db, p: dict) -> None:
                 sunlight = EXCLUDED.sunlight, soil_type = EXCLUDED.soil_type,
                 min_temp_c = EXCLUDED.min_temp_c, difficulty = EXCLUDED.difficulty,
                 description = EXCLUDED.description, image_urls = EXCLUDED.image_urls,
+                family = EXCLUDED.family, origin = EXCLUDED.origin,
+                growth_form = EXCLUDED.growth_form, leaf_color = EXCLUDED.leaf_color,
+                flower_color = EXCLUDED.flower_color, fruit_color = EXCLUDED.fruit_color,
+                leaf_pattern = EXCLUDED.leaf_pattern, leaf_style = EXCLUDED.leaf_style,
+                propagation_methods = EXCLUDED.propagation_methods, pests = EXCLUDED.pests,
+                toxicity = EXCLUDED.toxicity,
                 source = 'nongsaro', updated_at = now()
             """
         ),
