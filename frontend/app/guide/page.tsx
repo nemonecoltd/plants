@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import AdBanner from "@/components/AdBanner";
 import GuideCard from "@/components/GuideCard";
 import { getGuides } from "@/lib/api";
+import { seededShuffle, todaySeed } from "@/lib/shuffle";
 
 const PAGE_SIZE = 24;
 
@@ -32,7 +33,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function GuidePage({ searchParams }: Props) {
   const { category, page: pageParam } = await searchParams;
-  const allGuides = await getGuides();
+  const fetchedGuides = await getGuides();
+  // 최신 수집분이 published_at 기준으로 몰려서 1페이지를 독점하지 않도록 섞음
+  // (날짜로 시드를 고정해 하루 동안은 페이지 이동 시에도 순서가 안정적)
+  const allGuides = seededShuffle(fetchedGuides, todaySeed());
 
   const categoryCounts = new Map<string, number>();
   for (const g of allGuides) {

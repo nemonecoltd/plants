@@ -7,11 +7,28 @@ import type { GuideSummary } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
+// 랜덤으로 뽑다 보면 같은 카테고리(예: 채소)가 3개 중 2~3개를 차지해 다양성이
+// 떨어지는 경우가 있어, 카테고리당 최대 1개만 뽑히도록 제한
+function pickDiverseGuides(guides: GuideSummary[], count: number): GuideSummary[] {
+  const shuffled = [...guides].sort(() => Math.random() - 0.5);
+  const seen = new Set<string>();
+  const picked: GuideSummary[] = [];
+  for (const g of shuffled) {
+    const key = g.category ?? `__uncategorized_${g.slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    picked.push(g);
+    if (picked.length >= count) break;
+  }
+  return picked;
+}
+
 export default async function Home() {
   const [plants, guides] = await Promise.all([getPlants(), getGuides()]);
   const recentGuides = guides.slice(0, 3);
-  // 상단 노출용 랜덤 3개(1개 크게 + 2개 가로) — 매 요청마다 다른 팁을 보여줘 반복 방문 시에도 신선하게 느껴지도록 함
-  const highlightGuides = [...guides].sort(() => Math.random() - 0.5).slice(0, 3);
+  // 상단 노출용 랜덤 3개(1개 크게 + 2개 가로, 카테고리 중복 없이) — 매 요청마다
+  // 다른 팁을 보여줘 반복 방문 시에도 신선하게 느껴지도록 함
+  const highlightGuides = pickDiverseGuides(guides, 3);
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
 

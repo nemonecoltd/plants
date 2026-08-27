@@ -52,20 +52,21 @@ def extract_items(xml: str) -> list[str]:
 def pick_thumbnail(html: str) -> str | None:
     """맨 처음 이미지는 대개 재배 캘린더 같은 글자 위주 도표라 카드로 잘라내면
     읽을 수 없게 되는 경우가 많음 — alt에 "사진"이 들어간(실물 사진) 이미지를
-    우선하고, 없으면 마지막 이미지(보통 마무리에 붙는 완성 사진)를 씀."""
-    imgs = re.findall(r"<img([^>]*)>", html)
-    candidates: list[tuple[str, str]] = []
-    for attrs in imgs:
-        src_m = re.search(r'src="([^"]+)"', attrs)
-        if not src_m:
-            continue
-        alt_m = re.search(r'alt="([^"]*)"', attrs)
-        candidates.append((src_m.group(1), alt_m.group(1) if alt_m else ""))
-    if not candidates:
+    우선하고, 없으면 마지막 이미지(보통 마무리에 붙는 완성 사진)를 씀.
+
+    일부 원문의 alt 속성이 이스케이프 안 된 `<`, `/>`를 값으로 그대로 담고 있어
+    (예: alt="<실내 식물 재배기 />...") <img([^>]*)> 같은 태그 단위 정규식은
+    그 중간의 `>`를 태그 끝으로 착각해 src를 놓친다. 그래서 태그 파싱 대신
+    src="..." 자체를 문서 전체에서 찾고, 그 앞쪽 텍스트에 "사진"이 있는지로
+    근사 판단한다."""
+    srcs = [m.group(1) for m in re.finditer(r'src="([^"]+)"', html)]
+    if not srcs:
         return None
-    photo = next((src for src, alt in candidates if "사진" in alt), None)
-    chosen = photo or candidates[-1][0]
-    return chosen.replace("http://", "https://")
+    for src in srcs:
+        pos = html.find(f'src="{src}"')
+        if "사진" in html[max(0, pos - 150):pos]:
+            return src.replace("http://", "https://")
+    return srcs[-1].replace("http://", "https://")
 
 
 def is_thin_content(title: str, html: str) -> bool:
