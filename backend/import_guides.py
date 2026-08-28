@@ -26,7 +26,24 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+try:
+    # 한글 렌더링에 macOS 시스템 폰트를 쓰므로 로컬에서만 동작 — 서버(VM)에는
+    # 이 모듈이 없거나 실패해도 되고, 그때는 기존 파일이 있으면 그걸 그대로 쓴다.
+    from generate_thumbnail import generate_thumbnail
+except Exception:
+    generate_thumbnail = None
+
 load_dotenv(".env.local")
+
+# 로컬은 plants/backend, plants/frontend 형제 폴더 구조지만, 프로덕션(VM)은
+# ~/apps/plants_backend, ~/apps/plants_frontend로 각각 독립 배포되어 있어 이름이 다르다.
+_APPS_ROOT = Path(__file__).resolve().parent.parent
+_FRONTEND_CANDIDATES = ["frontend", "plants_frontend"]
+_frontend_dir = next(
+    (d for name in _FRONTEND_CANDIDATES if (d := _APPS_ROOT / name).is_dir()),
+    _APPS_ROOT / "frontend",
+)
+GUIDES_IMAGE_DIR = _frontend_dir / "public" / "images" / "guides"
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://localhost:5432/nemone_plants")
 engine = create_engine(DATABASE_URL)
@@ -92,6 +109,20 @@ def parse_published_at(value: str | None) -> datetime | None:
         return None
 
 
+def resolve_thumbnail(meta: dict, slug: str, title: str, category: str) -> str | None:
+    """front matter에 thumbnail이 없으면 브랜드 배너를 자동 생성해서 채운다.
+    이미 생성된 파일이 있으면 재생성하지 않음(수동으로 바꿔둔 이미지를 덮어쓰지 않기 위함)."""
+    if meta.get("thumbnail"):
+        return meta["thumbnail"]
+    out_path = GUIDES_IMAGE_DIR / f"{slug}.png"
+    if not out_path.exists() and generate_thumbnail is not None:
+        try:
+            generate_thumbnail(slug, title, category)
+        except Exception as e:
+            print(f"  ({slug}: 썸네일 자동생성 실패 — {e})")
+    return f"/images/guides/{slug}.png" if out_path.exists() else None
+
+
 def upsert(db, guide: dict) -> None:
     db.execute(
         text(
@@ -136,12 +167,13 @@ def run(dry_run: bool = False) -> None:
                 print(f"- {path.name}: 제목이 없어 건너뜀 (front matter의 title 또는 맨 앞 # 제목 필요)")
                 continue
 
+            category = meta.get("category") or "가드닝 기초"
             guide = {
                 "slug": slug,
                 "title": title,
-                "category": meta.get("category") or "가드닝 기초",
+                "category": category,
                 "summary": meta.get("summary") or None,
-                "thumbnail_url": meta.get("thumbnail") or None,
+                "thumbnail_url": resolve_thumbnail(meta, slug, title, category),
                 "body": to_html(body_md),
                 "tags": meta.get("tags") or [],
                 "published_at": parse_published_at(meta.get("published")),
