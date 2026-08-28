@@ -66,7 +66,9 @@ export interface GuideSummary {
   tags: string[];
   // 'original' = 자체 제작 글, 'nongsaro' = 농사로 수집분
   source: string | null;
+  is_hero: boolean;
   published_at: string | null;
+  updated_at: string | null;
 }
 
 export interface GuideTag {

@@ -25,12 +25,26 @@ function pickDiverseGuides(guides: GuideSummary[], count: number): GuideSummary[
   return picked;
 }
 
+// 관리자가 "메인 고정" 체크한 글이 있으면 히어로 0번 자리에 우선 배치. 여러 개가
+// 동시에 체크돼 있어도(편집 화면에서 막지 않음) 에러 없이 가장 최근에 수정된
+// 것으로 정리한다.
+function pickHighlightGuides(guides: GuideSummary[], count: number): GuideSummary[] {
+  const pinned = guides
+    .filter((g) => g.is_hero)
+    .sort((a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime())[0];
+
+  if (!pinned) return pickDiverseGuides(guides, count);
+
+  const rest = guides.filter((g) => g.slug !== pinned.slug);
+  return [pinned, ...pickDiverseGuides(rest, count - 1)];
+}
+
 export default async function Home() {
   const [plants, guides] = await Promise.all([getPlants(), getGuides()]);
   const recentGuides = guides.slice(0, 3);
   // 상단 노출용 랜덤 3개(1개 크게 + 2개 가로, 카테고리 중복 없이) — 매 요청마다
   // 다른 팁을 보여줘 반복 방문 시에도 신선하게 느껴지도록 함
-  const highlightGuides = pickDiverseGuides(guides, 3);
+  const highlightGuides = pickHighlightGuides(guides, 3);
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
 

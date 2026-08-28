@@ -2,14 +2,20 @@
 1차 착수 범위: 메인페이지(목록) + 상세페이지만 동작하면 되므로 plants 테이블 하나만 다룬다."""
 import os
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import List, Optional
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import ARRAY, Column, DateTime, Integer, String, Text, create_engine, func, text
+from sqlalchemy import ARRAY, Boolean, Column, DateTime, Integer, String, Text, create_engine, func, text
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
+from ai_content_service import generate_guide_draft
+from content_utils import GUIDES_IMAGE_DIR, dedupe_slug, strip_leading_h1, to_html
+from generate_thumbnail import generate_thumbnail
 
 load_dotenv(".env.local")
 
@@ -38,6 +44,8 @@ class Guide(Base):
     tags = Column(ARRAY(String))   # 자체 제작 글(source='original')의 롱테일 키워드
     published_at = Column(DateTime(timezone=True))
     source = Column(String)
+    is_hero = Column(Boolean, nullable=False, server_default=text("false"))  # 관리자 "메인 고정"
+    body_md = Column(Text)  # 관리자 화면으로 작성/수정한 글의 원본 마크다운(수정 화면용)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -169,7 +177,9 @@ def _guide_summary(g: Guide) -> dict:
         "thumbnail_url": g.thumbnail_url,
         "tags": g.tags or [],
         "source": g.source,
+        "is_hero": bool(g.is_hero),
         "published_at": g.published_at.isoformat() if g.published_at else None,
+        "updated_at": g.updated_at.isoformat() if g.updated_at else None,
     }
 
 
@@ -222,6 +232,142 @@ def get_guide(slug: str):
         if not guide:
             raise HTTPException(status_code=404, detail="가드닝팁을 찾을 수 없습니다")
         return _guide_detail(guide)
+    finally:
+        db.close()
+
+
+# ── 관리자(/admin) ───────────────────────────────────────────────────────────
+# 브라우저는 이 시크릿을 절대 보지 않음 — Next.js 서버(라우트 핸들러/서버 컴포넌트)만
+# 알고 있고, matmatch/admin의 x-admin-secret 패턴을 그대로 따른다.
+PLANTS_ADMIN_SECRET = os.environ.get("PLANTS_ADMIN_SECRET")
+
+
+def verify_admin(x_plants_admin_secret: str = Header(None)) -> None:
+    if not PLANTS_ADMIN_SECRET or x_plants_admin_secret != PLANTS_ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="관리자 인증 실패")
+
+
+class GuideDraftRequest(BaseModel):
+    keywords: str
+
+
+class GuidePublishRequest(BaseModel):
+    title: str
+    slug: str
+    summary: Optional[str] = None
+    category: Optional[str] = None
+    tags: List[str] = []
+    body_markdown: str
+    is_hero: bool = False
+
+
+@app.get("/api/admin/guides", dependencies=[Depends(verify_admin)])
+def admin_list_guides():
+    db = SessionLocal()
+    try:
+        guides = (
+            db.query(Guide)
+            .filter(Guide.source == "original")
+            .order_by(Guide.created_at.desc())
+            .all()
+        )
+        return {"items": [_guide_summary(g) for g in guides]}
+    finally:
+        db.close()
+
+
+@app.get("/api/admin/guides/{slug}", dependencies=[Depends(verify_admin)])
+def admin_get_guide(slug: str):
+    db = SessionLocal()
+    try:
+        guide = db.query(Guide).filter(Guide.slug == slug, Guide.source == "original").first()
+        if not guide:
+            raise HTTPException(status_code=404, detail="가드닝팁을 찾을 수 없습니다")
+        return {**_guide_summary(guide), "body_md": guide.body_md}
+    finally:
+        db.close()
+
+
+@app.post("/api/admin/guides/draft", dependencies=[Depends(verify_admin)])
+def admin_generate_draft(req: GuideDraftRequest):
+    if not req.keywords.strip():
+        raise HTTPException(status_code=400, detail="키워드를 입력해주세요")
+    try:
+        return generate_guide_draft(req.keywords)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"AI 초안 생성 실패: {e}")
+
+
+@app.post("/api/admin/guides", dependencies=[Depends(verify_admin)])
+def admin_publish_guide(req: GuidePublishRequest):
+    db = SessionLocal()
+    try:
+        slug = dedupe_slug(req.slug, db)
+        _, body_md = strip_leading_h1(req.body_markdown)
+        html = to_html(body_md)
+        thumbnail_url = None
+        out_path = generate_thumbnail(slug, req.title, req.category)
+        if out_path.exists():
+            thumbnail_url = f"/images/guides/{slug}.png"
+
+        guide = Guide(
+            slug=slug,
+            title=req.title,
+            category=req.category or "가드닝 기초",
+            summary=req.summary,
+            thumbnail_url=thumbnail_url,
+            body=html,
+            body_md=req.body_markdown,
+            tags=req.tags,
+            published_at=datetime.now(_KST),
+            source="original",
+            is_hero=req.is_hero,
+        )
+        db.add(guide)
+        db.commit()
+        return {"slug": slug}
+    finally:
+        db.close()
+
+
+@app.put("/api/admin/guides/{slug}", dependencies=[Depends(verify_admin)])
+def admin_update_guide(slug: str, req: GuidePublishRequest):
+    db = SessionLocal()
+    try:
+        guide = db.query(Guide).filter(Guide.slug == slug, Guide.source == "original").first()
+        if not guide:
+            raise HTTPException(status_code=404, detail="가드닝팁을 찾을 수 없습니다")
+
+        new_slug = dedupe_slug(req.slug, db, exclude_slug=slug) if req.slug != slug else slug
+        guide.slug = new_slug
+        guide.title = req.title
+        guide.category = req.category or "가드닝 기초"
+        guide.summary = req.summary
+        guide.tags = req.tags
+        guide.is_hero = req.is_hero
+        guide.body_md = req.body_markdown
+        _, stripped_body = strip_leading_h1(req.body_markdown)
+        guide.body = to_html(stripped_body)
+        guide.updated_at = datetime.now(_KST)
+        db.commit()
+        return {"slug": new_slug}
+    finally:
+        db.close()
+
+
+@app.delete("/api/admin/guides/{slug}", dependencies=[Depends(verify_admin)])
+def admin_delete_guide(slug: str):
+    db = SessionLocal()
+    try:
+        guide = db.query(Guide).filter(Guide.slug == slug, Guide.source == "original").first()
+        if not guide:
+            raise HTTPException(status_code=404, detail="가드닝팁을 찾을 수 없습니다")
+        db.delete(guide)
+        db.commit()
+        if guide.thumbnail_url and guide.thumbnail_url.startswith("/images/guides/"):
+            thumb_path = GUIDES_IMAGE_DIR / Path(guide.thumbnail_url).name
+            thumb_path.unlink(missing_ok=True)
+        return {"ok": True}
     finally:
         db.close()
 

@@ -114,6 +114,11 @@ export default function MyGardenPage() {
               <div className="text-[11px] text-gray-400 truncate">{user.email}</div>
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
+              {user.email === "nemonecoltd@gmail.com" && (
+                <Link href="/admin" className="text-[11px] font-medium text-plant-primary no-underline">
+                  관리자 →
+                </Link>
+              )}
               <a
                 href={`${profileUrl}?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
                 className="text-[11px] font-medium text-plant-secondary hover:text-plant-primary no-underline"

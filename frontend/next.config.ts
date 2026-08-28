@@ -12,10 +12,12 @@ const nextConfig: NextConfig = {
   },
   // 브라우저에서 /api/*를 호출할 때(마이가든 저장 등) — 프로덕션은 nginx가 /api/를
   // 백엔드(:8082)로 먼저 보내주므로 여기까지 오지 않고, 로컬에서만 이 rewrite가 쓰인다.
+  // /api/admin/*은 제외 — 그건 이 앱 자신의 라우트 핸들러(app/api/admin/*)가 처리해야
+  // 관리자 인증(requireAdmin)을 거친 뒤에만 백엔드로 프록시되기 때문.
   async rewrites() {
     return [
       {
-        source: "/api/:path*",
+        source: "/api/:path((?!admin/).*)",
         destination: `${process.env.BACKEND_URL || "http://127.0.0.1:8000"}/api/:path*`,
       },
     ];

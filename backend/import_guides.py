@@ -16,34 +16,18 @@
 from __future__ import annotations
 
 import os
-import re
 import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-import markdown as md
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-try:
-    # 한글 렌더링에 macOS 시스템 폰트를 쓰므로 로컬에서만 동작 — 서버(VM)에는
-    # 이 모듈이 없거나 실패해도 되고, 그때는 기존 파일이 있으면 그걸 그대로 쓴다.
-    from generate_thumbnail import generate_thumbnail
-except Exception:
-    generate_thumbnail = None
+from content_utils import GUIDES_IMAGE_DIR, strip_leading_h1, to_html
+from generate_thumbnail import generate_thumbnail
 
 load_dotenv(".env.local")
-
-# 로컬은 plants/backend, plants/frontend 형제 폴더 구조지만, 프로덕션(VM)은
-# ~/apps/plants_backend, ~/apps/plants_frontend로 각각 독립 배포되어 있어 이름이 다르다.
-_APPS_ROOT = Path(__file__).resolve().parent.parent
-_FRONTEND_CANDIDATES = ["frontend", "plants_frontend"]
-_frontend_dir = next(
-    (d for name in _FRONTEND_CANDIDATES if (d := _APPS_ROOT / name).is_dir()),
-    _APPS_ROOT / "frontend",
-)
-GUIDES_IMAGE_DIR = _frontend_dir / "public" / "images" / "guides"
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://localhost:5432/nemone_plants")
 engine = create_engine(DATABASE_URL)
@@ -81,23 +65,6 @@ def parse_front_matter(raw: str) -> tuple[dict, str]:
     return meta, body
 
 
-def strip_leading_h1(body: str) -> tuple[str | None, str]:
-    """맨 앞 H1을 제목으로 뽑고 본문에서 제거 — 제목이 화면에 두 번 나오는 것 방지.
-    본문 중간의 H1은 실제 소제목일 수 있으므로 건드리지 않는다(맛매치 어드민과 동일 규칙)."""
-    lines = body.lstrip("\n").splitlines()
-    if lines and re.match(r"^#\s+\S", lines[0]):
-        title = lines[0].lstrip("#").strip()
-        rest = lines[1:]
-        while rest and not rest[0].strip():
-            rest.pop(0)
-        return title, "\n".join(rest)
-    return None, body
-
-
-def to_html(body_md: str) -> str:
-    # tables: 비교표(예: 계절별 물주기 차이)를 쓰기 위해 필요
-    # nl2br 없이 — 마크다운 표준대로 빈 줄로 문단을 나눈다
-    return md.markdown(body_md, extensions=["tables", "sane_lists", "attr_list"])
 
 
 def parse_published_at(value: str | None) -> datetime | None:

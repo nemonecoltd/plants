@@ -1,7 +1,8 @@
 """가드닝팁(자체 제작 글)의 상단 이미지를 브랜드 아이콘/컬러로 자동 생성.
-외부 API·스톡사진 없이 PIL만 사용 — 대신 한글 렌더링에 macOS 시스템 폰트
-(AppleSDGothicNeo)를 쓰므로 이 스크립트는 서버가 아니라 로컬(맥)에서만 실행한다.
-import_guides.py가 발행 시점에 이 함수를 호출해 없는 썸네일만 채운다.
+외부 API·스톡사진 없이 PIL만 사용. 한글 렌더링은 저장소에 함께 커밋된 오픈소스
+가변폰트(Noto Sans KR, SIL OFL)를 쓰므로 로컬/프로덕션(Linux VM) 어디서나 동일하게
+동작한다(예전엔 macOS 시스템 폰트 의존이라 서버에서는 생성이 안 됐음).
+import_guides.py와 관리자 API가 발행 시점에 이 함수를 호출해 없는 썸네일만 채운다.
 """
 from __future__ import annotations
 
@@ -9,10 +10,15 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-FRONTEND_PUBLIC = Path(__file__).resolve().parent.parent / "frontend" / "public"
+from content_utils import GUIDES_IMAGE_DIR
+
+# GUIDES_IMAGE_DIR = <frontend>/public/images/guides — 여기서 <frontend>/public을 역산.
+# (프로덕션 ~/apps/에는 다른 서비스의 "frontend" 폴더도 있어 이 경로 탐지를
+# content_utils.py 한 곳에만 두고 재사용한다 — 중복 정의하면 또 어긋날 수 있음)
+FRONTEND_PUBLIC = GUIDES_IMAGE_DIR.parent.parent
 ICON_PATH = FRONTEND_PUBLIC / "brand" / "logo-icon.png"
 LOGO_PATH = FRONTEND_PUBLIC / "brand" / "logo-horizontal.png"
-FONT_PATH = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
+FONT_PATH = Path(__file__).resolve().parent / "assets" / "fonts" / "NotoSansKR-Bold.ttf"
 
 CREAM = (244, 246, 244, 255)
 PRIMARY = (45, 90, 39, 255)  # --plant-primary
@@ -21,8 +27,11 @@ SECONDARY_BADGE = (138, 154, 134, 40)  # 사이트의 bg-plant-secondary/15 톤�
 W, H = 1200, 900
 
 
-def _font(size: int, index: int = 6) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(FONT_PATH, size, index=index)
+def _font(size: int, weight: int = 700) -> ImageFont.FreeTypeFont:
+    # 가변폰트(Weight 축 100~900) 하나로 SemiBold(배지)/Bold(제목)를 모두 커버
+    f = ImageFont.truetype(str(FONT_PATH), size)
+    f.set_variation_by_axes([weight])
+    return f
 
 
 def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list[str]:
@@ -54,7 +63,7 @@ def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFon
 
 
 def generate_thumbnail(slug: str, title: str, category: str | None, out_dir: Path | None = None) -> Path:
-    out_dir = out_dir or (FRONTEND_PUBLIC / "images" / "guides")
+    out_dir = out_dir or GUIDES_IMAGE_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{slug}.png"
 
@@ -78,7 +87,7 @@ def generate_thumbnail(slug: str, title: str, category: str | None, out_dir: Pat
     # 카테고리 배지
     title_top = safe_top + 10
     if category:
-        badge_font = _font(30, index=4)
+        badge_font = _font(30, weight=600)
         tw = draw.textlength(category, font=badge_font)
         bx0, by0 = pad, safe_top
         bx1, by1 = bx0 + tw + 48, by0 + 62
@@ -90,7 +99,7 @@ def generate_thumbnail(slug: str, title: str, category: str | None, out_dir: Pat
     max_w = W - pad * 2 - 60
     size = 74
     while True:
-        title_font = _font(size, index=6)
+        title_font = _font(size, weight=700)
         lines = _wrap_text(draw, title, title_font, max_w)
         if len(lines) <= 4 or size <= 44:
             break
