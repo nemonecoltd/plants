@@ -51,7 +51,7 @@ export default async function Home() {
       />
 
       {/* 화면에는 안 보이지만 페이지 정체성을 위해 h1은 유지(SEO/접근성) */}
-      <h1 className="sr-only">식물도감 &amp; 케어 가이드</h1>
+      <h1 className="sr-only">식물도감 &amp; 식물집사 케어 가이드 — 저장하고 개화·파종 시기 알림받기</h1>
 
       {/* ── 가드닝팁 하이라이트(랜덤 3개: 왼쪽 1개 크게 + 오른쪽 2개 가로) ── */}
       {highlightGuides.length > 0 && (
@@ -115,13 +115,20 @@ export default async function Home() {
           )}
         </section>
 
-        {/* ── 회원가입 유도 CTA (준비 중) ── */}
+        {/* ── 마이가든 유도 CTA — 출시 전 "준비 중" 문구를 실제 기능 안내로 교체(2026-08-28) ── */}
         <section className="py-12 text-center">
           <h2 className="text-xl font-bold text-plant-primary mb-2">나만의 식물을 기록해보세요</h2>
-          <p className="text-sm text-gray-500 mb-6">마이가든·케어 알림 기능을 준비하고 있어요.</p>
-          <span className="inline-block px-8 py-3 rounded-full bg-plant-primary text-white text-sm font-bold opacity-60 cursor-not-allowed">
-            회원가입 (준비 중)
-          </span>
+          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+            마음에 드는 식물과 가드닝팁을 마이가든에 저장하면,
+            <br className="hidden sm:block" />
+            개화·파종 시기가 오면 알려드려요.
+          </p>
+          <Link
+            href="/my-garden"
+            className="inline-block px-8 py-3 rounded-full bg-plant-primary text-white text-sm font-bold no-underline hover:opacity-90 transition-opacity"
+          >
+            마이가든 시작하기
+          </Link>
         </section>
       </main>
     </div>

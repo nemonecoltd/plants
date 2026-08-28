@@ -8,6 +8,14 @@ import PlantCard from "@/components/PlantCard";
 import { useSaved } from "@/components/SavedProvider";
 import type { GuideSummary, PlantSummary } from "@/lib/api";
 
+// 계정 하나로 여러 서비스를 쓰는데 이동 동선이 없어서 하단에 배치(AIM/PACE 마이페이지와 동일).
+// PLANTS는 이 페이지 자신이라 제외, MSM은 아직 통합 인증 대상이 아니지만 서비스 소개 차원에서 포함.
+const NEMONE_SERVICES = [
+  { name: '네모네AIM', href: "https://nemoneai.com", icon: "📰", desc: "당신 시간의 알찬 소비" },
+  { name: "NEMONE PACE", href: "https://now.nemoneai.com", icon: "🗺️", desc: "당신의 다음 3시간을 설계합니다" },
+  { name: "NEMONE MSM", href: "https://msm.nemoneai.com", icon: "📈", desc: "국내 주식 AI 분석" },
+];
+
 type Notice = {
   type: "bloom" | "planting";
   month: number;
@@ -189,6 +197,29 @@ export default function MyGardenPage() {
             ))}
           </div>
         )}
+
+        {/* 네모네 다른 서비스 */}
+        <section className="mt-12 pt-8 border-t border-gray-200">
+          <h2 className="text-[11px] font-bold text-gray-400 tracking-wider mb-4">네모네의 다른 서비스</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {NEMONE_SERVICES.map((s) => (
+              <a
+                key={s.href}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3.5 hover:border-plant-primary transition-colors no-underline"
+              >
+                <span className="text-lg shrink-0">{s.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-plant-primary truncate">{s.name}</p>
+                  <p className="text-[10px] text-gray-400 truncate">{s.desc}</p>
+                </div>
+                <span className="text-gray-300 text-xs shrink-0" aria-hidden="true">↗</span>
+              </a>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );

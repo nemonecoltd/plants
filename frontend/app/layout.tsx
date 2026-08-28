@@ -21,15 +21,24 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = "https://plants.nemoneai.com";
 const SITE_NAME = "NEMONE PLANTS";
-const SITE_DESCRIPTION = "실내식물부터 정원식물까지, 정확한 학명·물주기·빛·내한성 정보로 찾아보는 식물도감 & 케어 가이드.";
+// 마이가든 출시(2026-08-28)로 단순 정보 제공에서 "키우는 사람을 돕는 서비스"로 성격이 확장돼
+// 설명문도 저장·알림(재방문 가치)까지 담도록 갱신.
+const SITE_DESCRIPTION =
+  "실내식물부터 정원식물까지 학명·물주기·빛·내한성을 확인하고, 마이가든에 저장해 개화·파종 시기 알림까지 받아보세요. 초보 식물집사의 성장을 돕는 식물도감 & 케어 가이드.";
+// "식물집사"는 실제 검색량이 있는 표현이라 타이틀에 포함(브랜드 슬로건과도 일치)
+const SITE_TITLE = `${SITE_NAME} | 식물도감 & 식물집사 케어 가이드`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | 식물도감 & 케어 가이드`,
+    default: SITE_TITLE,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  keywords: [
+    "식물도감", "식물집사", "식물 키우기", "실내식물", "물주기",
+    "반려식물", "가드닝", "개화시기", "파종시기", "식물 이름 찾기",
+  ],
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   verification: {
@@ -49,19 +58,18 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: `${SITE_NAME} | 식물도감 & 케어 가이드`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     images: [{ url: "/images/plants/hero.jpg", width: 960, height: 640, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} | 식물도감 & 케어 가이드`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     images: ["/images/plants/hero.jpg"],
   },
 };
 
-// 아직 검색 기능이 없어 SearchAction은 넣지 않음(작동 안 하는 구조화데이터는 오히려 감점 요인).
 // Organization은 msm/now와 동일한 네모네(모회사) 정보를 재사용.
 const jsonLd = [
   {
@@ -71,6 +79,33 @@ const jsonLd = [
     url: SITE_URL,
     description: SITE_DESCRIPTION,
     inLanguage: "ko-KR",
+    // 검색(/plants?q=)이 실제로 동작하게 된 뒤 추가 — 작동하지 않는 구조화데이터는 감점 요인이라
+    // 기능이 붙기 전까지는 일부러 비워뒀었음
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/plants?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
+  },
+  {
+    // 단순 문서 사이트가 아니라 "저장하고 알림받으며 키우는" 도구임을 검색엔진에 명시(마이가든 출시)
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: SITE_NAME,
+    url: SITE_URL,
+    applicationCategory: "LifestyleApplication",
+    operatingSystem: "Web",
+    inLanguage: "ko-KR",
+    description:
+      "식물도감에서 찾은 식물과 가드닝팁을 마이가든에 저장하고, 개화·파종 시기에 맞춰 알림을 받아보는 식물 관리 서비스.",
+    featureList: [
+      "식물 학명·물주기·빛·내한성 정보 조회",
+      "이름으로 식물 검색",
+      "월별 개화 식물 추천",
+      "마이가든에 식물·가드닝팁 저장",
+      "저장한 식물의 개화·파종 시기 알림",
+    ],
+    offers: { "@type": "Offer", price: "0", priceCurrency: "KRW" },
   },
   {
     "@context": "https://schema.org",
