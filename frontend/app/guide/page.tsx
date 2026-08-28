@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import AdBanner from "@/components/AdBanner";
 import GuideCard from "@/components/GuideCard";
-import { getGuides } from "@/lib/api";
+import { getGuides, getGuideTags } from "@/lib/api";
 import { seededShuffle, todaySeed } from "@/lib/shuffle";
 
 const PAGE_SIZE = 24;
@@ -33,7 +33,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function GuidePage({ searchParams }: Props) {
   const { category, page: pageParam } = await searchParams;
-  const fetchedGuides = await getGuides();
+  const [fetchedGuides, tags] = await Promise.all([getGuides(), getGuideTags()]);
   // 최신 수집분이 published_at 기준으로 몰려서 1페이지를 독점하지 않도록 섞음
   // (날짜로 시드를 고정해 하루 동안은 페이지 이동 시에도 순서가 안정적)
   const allGuides = seededShuffle(fetchedGuides, todaySeed());
@@ -94,6 +94,24 @@ export default async function GuidePage({ searchParams }: Props) {
             </Link>
           ))}
         </div>
+
+        {/* 주제(태그) — 자체 제작 글에만 달리며, 각 태그는 색인 대상 페이지가 된다 */}
+        {tags.length > 0 && (
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <div className="text-[11px] font-bold text-gray-400 tracking-wider mb-2.5">주제로 찾기</div>
+            <div className="flex flex-wrap gap-2">
+              {tags.map((t) => (
+                <Link
+                  key={t.tag}
+                  href={`/guide/tag/${encodeURIComponent(t.tag)}`}
+                  className="text-xs px-3 py-1.5 rounded-full bg-plant-secondary/15 text-plant-primary font-medium no-underline hover:bg-plant-secondary/25 transition-colors"
+                >
+                  #{t.tag} <span className="opacity-50">{t.count}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {filtered.length === 0 ? (
           <p className="text-gray-500 text-sm">등록된 가드닝팁이 없습니다.</p>

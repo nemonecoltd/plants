@@ -22,6 +22,16 @@ function spaceOutGuideBody(html: string): string {
     .replace(/([^\s>])\s+(-\s*[가-힣]{1,4}\s*:)/g, "$1<br />$2");
 }
 
+// 자체 글은 우리가 길이를 정하므로 본문 중간에 광고 지면을 자연스럽게 넣을 수 있음.
+// 첫 소제목(<h2>) 앞을 기준으로 나눠, 도입부를 읽은 직후에 한 번 노출한다.
+// 수집분(농사로)은 문단 구조가 제각각이라 적용하지 않는다.
+function splitAtFirstHeading(html: string): [string, string] | null {
+  const idx = html.indexOf("<h2");
+  // 도입부가 너무 짧으면(바로 소제목으로 시작) 광고가 제목 바로 아래 붙어 어색해짐
+  if (idx < 200) return null;
+  return [html.slice(0, idx), html.slice(idx)];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const guide = await getGuide(slug);
@@ -55,14 +65,30 @@ export default async function GuideDetailPage({ params }: Props) {
     notFound();
   }
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: guide.title,
-    description: guide.summary ?? undefined,
-    image: guide.image_urls ?? undefined,
-    datePublished: guide.published_at ?? undefined,
-  };
+  const isOriginal = guide.source === "original";
+
+  // 수집분은 "만드는 법" 성격이라 HowTo가 맞지만, 자체 글은 설명형 아티클이라 Article이 맞다.
+  const jsonLd = isOriginal
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: guide.title,
+        description: guide.summary ?? undefined,
+        image: guide.thumbnail_url ?? undefined,
+        datePublished: guide.published_at ?? undefined,
+        mainEntityOfPage: `${SITE_URL}/guide/${slug}`,
+        keywords: guide.tags.length ? guide.tags.join(", ") : undefined,
+        author: { "@type": "Organization", name: "NEMONE PLANTS", url: SITE_URL },
+        publisher: { "@type": "Organization", name: "NEMONE PLANTS", url: SITE_URL },
+      }
+    : {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        name: guide.title,
+        description: guide.summary ?? undefined,
+        image: guide.image_urls ?? undefined,
+        datePublished: guide.published_at ?? undefined,
+      };
 
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
@@ -102,12 +128,20 @@ export default async function GuideDetailPage({ params }: Props) {
               </div>
             )}
 
-            {guide.body && (
-              // 농촌진흥청 공식 API가 주는 신뢰된 HTML(사용자 입력 아님) — 단계별 설명 마크업 그대로 렌더링
-              <div
-                className="text-sm text-gray-700 leading-relaxed [&_p]:mb-2 [&_img]:rounded [&_img]:my-3 [&_img]:max-w-full"
-                dangerouslySetInnerHTML={{ __html: spaceOutGuideBody(guide.body) }}
-              />
+            {guide.body && <GuideBody html={guide.body} isOriginal={isOriginal} />}
+
+            {isOriginal && guide.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-6 pt-4 border-t border-gray-100">
+                {guide.tags.map((t) => (
+                  <Link
+                    key={t}
+                    href={`/guide/tag/${encodeURIComponent(t)}`}
+                    className="text-[11px] px-2.5 py-1 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25 transition-colors"
+                  >
+                    #{t}
+                  </Link>
+                ))}
+              </div>
             )}
 
             {guide.source === "nongsaro" && (
@@ -123,5 +157,33 @@ export default async function GuideDetailPage({ params }: Props) {
         </div>
       </main>
     </div>
+  );
+}
+
+// 자체 글은 마크다운을 변환한 정돈된 HTML(h2/h3/표/목록)이라 서식을 제대로 살리고,
+// 도입부 뒤에 광고를 한 번 넣는다. 수집분은 기존 렌더링(줄바꿈 보정)을 그대로 유지.
+function GuideBody({ html, isOriginal }: { html: string; isOriginal: boolean }) {
+  const proseClass = isOriginal
+    ? "text-[15px] text-gray-700 leading-[1.85] [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-plant-primary [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:text-[15px] [&_h3]:font-bold [&_h3]:text-plant-primary [&_h3]:mt-6 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4 [&_li]:mb-1.5 [&_strong]:text-plant-primary [&_a]:text-plant-primary [&_a]:underline [&_table]:w-full [&_table]:my-5 [&_table]:text-[13px] [&_th]:bg-plant-secondary/10 [&_th]:text-plant-primary [&_th]:font-bold [&_th]:p-2 [&_th]:text-left [&_th]:border [&_th]:border-gray-200 [&_td]:p-2 [&_td]:border [&_td]:border-gray-200 [&_td]:align-top"
+    : "text-sm text-gray-700 leading-relaxed [&_p]:mb-2 [&_img]:rounded [&_img]:my-3 [&_img]:max-w-full";
+
+  if (!isOriginal) {
+    return <div className={proseClass} dangerouslySetInnerHTML={{ __html: spaceOutGuideBody(html) }} />;
+  }
+
+  const split = splitAtFirstHeading(html);
+  if (!split) {
+    return <div className={proseClass} dangerouslySetInnerHTML={{ __html: html }} />;
+  }
+
+  const [intro, rest] = split;
+  return (
+    <>
+      <div className={proseClass} dangerouslySetInnerHTML={{ __html: intro }} />
+      <div className="my-6">
+        <AdBanner dataAdSlot="6819394440" />
+      </div>
+      <div className={proseClass} dangerouslySetInnerHTML={{ __html: rest }} />
+    </>
   );
 }

@@ -35,6 +35,7 @@ class Guide(Base):
     thumbnail_url = Column(String)
     image_urls = Column(ARRAY(String))
     body = Column(Text)
+    tags = Column(ARRAY(String))   # 자체 제작 글(source='original')의 롱테일 키워드
     published_at = Column(DateTime(timezone=True))
     source = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -165,6 +166,8 @@ def _guide_summary(g: Guide) -> dict:
         "category": g.category,
         "summary": g.summary,
         "thumbnail_url": g.thumbnail_url,
+        "tags": g.tags or [],
+        "source": g.source,
         "published_at": g.published_at.isoformat() if g.published_at else None,
     }
 
@@ -185,6 +188,27 @@ def list_guides():
     try:
         guides = db.query(Guide).order_by(Guide.published_at.desc().nullslast()).all()
         return {"items": [_guide_summary(g) for g in guides]}
+    finally:
+        db.close()
+
+
+@app.get("/api/guide-tags")
+def list_guide_tags():
+    """태그별 글 수 — 태그 페이지 생성과 sitemap에 쓰인다.
+    라우트 순서상 /api/guides/{slug}보다 위에 있어야 slug로 잡히지 않음(경로가 달라 무관하지만 명시)."""
+    db = SessionLocal()
+    try:
+        rows = db.execute(
+            text(
+                """
+                SELECT tag, COUNT(*) AS cnt
+                FROM guides, unnest(tags) AS tag
+                GROUP BY tag
+                ORDER BY cnt DESC, tag
+                """
+            )
+        ).all()
+        return {"items": [{"tag": r[0], "count": r[1]} for r in rows]}
     finally:
         db.close()
 

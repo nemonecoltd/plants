@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { getGuides, getPlants } from "@/lib/api";
+import { getGuideTags, getGuides, getPlants } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [plants, guides] = await Promise.all([getPlants(), getGuides()]);
+  const [plants, guides, tags] = await Promise.all([getPlants(), getGuides(), getGuideTags()]);
 
   return [
     {
@@ -34,8 +34,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...guides.map((g) => ({
       url: `${SITE_URL}/guide/${g.slug}`,
       lastModified: g.published_at ? new Date(g.published_at) : undefined,
-      changeFrequency: "yearly" as const,
-      priority: 0.6,
+      // 자체 글은 계절 정보를 갱신할 여지가 있어 수집분보다 자주 확인하도록 둠
+      changeFrequency: g.source === "original" ? ("monthly" as const) : ("yearly" as const),
+      priority: g.source === "original" ? 0.7 : 0.6,
+    })),
+    // 태그 페이지 — 롱테일 키워드마다 색인 대상이 하나씩 생기고, 관련 글을 서로 묶어준다
+    ...tags.map((t) => ({
+      url: `${SITE_URL}/guide/tag/${encodeURIComponent(t.tag)}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.5,
     })),
   ];
 }

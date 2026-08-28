@@ -62,7 +62,15 @@ export interface GuideSummary {
   category: string | null;
   summary: string | null;
   thumbnail_url: string | null;
+  tags: string[];
+  // 'original' = 자체 제작 글, 'nongsaro' = 농사로 수집분
+  source: string | null;
   published_at: string | null;
+}
+
+export interface GuideTag {
+  tag: string;
+  count: number;
 }
 
 export interface GuideDetail extends GuideSummary {
@@ -74,6 +82,11 @@ export interface GuideDetail extends GuideSummary {
 
 export async function getGuides(): Promise<GuideSummary[]> {
   const data = await fetchApi<{ items: GuideSummary[] }>("/api/guides");
+  return data?.items ?? [];
+}
+
+export async function getGuideTags(): Promise<GuideTag[]> {
+  const data = await fetchApi<{ items: GuideTag[] }>("/api/guide-tags");
   return data?.items ?? [];
 }
 
