@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.nongsaro.go.kr" },
     ],
   },
+  // 브라우저에서 /api/*를 호출할 때(마이가든 저장 등) — 프로덕션은 nginx가 /api/를
+  // 백엔드(:8082)로 먼저 보내주므로 여기까지 오지 않고, 로컬에서만 이 rewrite가 쓰인다.
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${process.env.BACKEND_URL || "http://127.0.0.1:8000"}/api/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

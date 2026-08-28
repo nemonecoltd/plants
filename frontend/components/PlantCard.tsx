@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import SaveButton from "@/components/SaveButton";
 import type { PlantSummary } from "@/lib/api";
 import { getPlantImage } from "@/lib/placeholderImages";
 
@@ -14,8 +15,9 @@ export default function PlantCard({ plant }: { plant: PlantSummary }) {
   return (
     <Link
       href={`/plants/${plant.slug}`}
-      className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
+      className="relative block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
     >
+      <SaveButton kind="plant" slug={plant.slug} />
       <div className="relative aspect-[4/3] bg-plant-secondary/10">
         {img ? (
           <Image src={img} alt={plant.name_kr} fill className="object-cover" />

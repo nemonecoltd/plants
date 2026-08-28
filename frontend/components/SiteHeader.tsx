@@ -1,13 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
+import HeaderAccountButton from "@/components/HeaderAccountButton";
 import SearchBar from "@/components/SearchBar";
 
 const NAV_LINKS = [
   { label: "홈", href: "/", enabled: true },
   { label: "전체 식물", href: "/plants", enabled: true },
   { label: "가드닝팁", href: "/guide", enabled: true },
-  { label: "마이가든", href: "/my-garden", enabled: false },
+  { label: "마이가든", href: "/my-garden", enabled: true },
 ] as const;
 
 export default function SiteHeader() {
@@ -64,15 +65,8 @@ export default function SiteHeader() {
             )}
           </nav>
 
-          {/* 로그인 — 아직 인증 미연동, msm/matmatch와 동일하게 원형 아이콘 버튼만 준비 */}
-          <button
-            type="button"
-            aria-disabled="true"
-            title="로그인 준비 중입니다"
-            className="w-8 h-8 rounded-full border-[1.5px] border-plant-primary text-plant-primary flex items-center justify-center shrink-0 cursor-not-allowed opacity-70"
-          >
-            <UserIcon />
-          </button>
+          {/* 로그인/프로필 — 네모네 통합 인증(auth.nemoneai.com) 연동 */}
+          <HeaderAccountButton />
         </div>
       </div>
 
@@ -83,14 +77,5 @@ export default function SiteHeader() {
         </p>
       </div>
     </header>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-4 h-4" style={{ stroke: "currentColor", strokeWidth: 2, fill: "none" }}>
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.5-7 8-7s8 3 8 7" />
-    </svg>
   );
 }

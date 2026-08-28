@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
+import SaveButton from "@/components/SaveButton";
 import { getGuide } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
@@ -83,6 +84,10 @@ export default async function GuideDetailPage({ params }: Props) {
           <div className="p-6">
             {guide.category && <div className="text-xs text-plant-secondary mb-1">{guide.category}</div>}
             <h1 className="text-2xl font-bold text-plant-primary mb-3">{guide.title}</h1>
+
+            <div className="mb-4">
+              <SaveButton kind="guide" slug={guide.slug} variant="inline" />
+            </div>
 
             {guide.summary && (
               <p className="text-sm text-gray-600 leading-relaxed mb-4 border-b border-gray-100 pb-4">

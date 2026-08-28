@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { AuthProvider } from "@/components/AuthProvider";
 import BottomNav from "@/components/BottomNav";
 import NaverAnalytics from "@/components/NaverAnalytics";
+import { SavedProvider } from "@/components/SavedProvider";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import "./globals.css";
@@ -116,10 +118,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           `}
         </Script>
 
-        <SiteHeader />
-        {children}
-        <SiteFooter />
-        <BottomNav />
+        <AuthProvider>
+          <SavedProvider>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+            <BottomNav />
+          </SavedProvider>
+        </AuthProvider>
 
         <NaverAnalytics />
       </body>

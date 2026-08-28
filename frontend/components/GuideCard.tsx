@@ -1,13 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
+import SaveButton from "@/components/SaveButton";
 import type { GuideSummary } from "@/lib/api";
 
 export default function GuideCard({ guide }: { guide: GuideSummary }) {
   return (
     <Link
       href={`/guide/${guide.slug}`}
-      className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
+      className="relative block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
     >
+      <SaveButton kind="guide" slug={guide.slug} />
       <div className="relative aspect-[4/3] bg-plant-secondary/10">
         {guide.thumbnail_url ? (
           <Image src={guide.thumbnail_url} alt={guide.title} fill className="object-cover" />

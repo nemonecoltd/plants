@@ -1,15 +1,20 @@
 """NEMONE PLANTS 백엔드 — matmatch/now_back과 동일하게 FastAPI + 동기 SQLAlchemy(psycopg2) 사용.
 1차 착수 범위: 메인페이지(목록) + 상세페이지만 동작하면 되므로 plants 테이블 하나만 다룬다."""
 import os
+from datetime import datetime, timedelta, timezone
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import ARRAY, Column, DateTime, Integer, String, Text, create_engine, func
+from pydantic import BaseModel
+from sqlalchemy import ARRAY, Column, DateTime, Integer, String, Text, create_engine, func, text
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 load_dotenv(".env.local")
+
+# 개화/심는 시기 알림은 "지금 몇 월인가"가 기준이라 서버 UTC가 아닌 한국시간으로 판단
+_KST = timezone(timedelta(hours=9))
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://localhost:5432/nemone_plants")
 
@@ -192,6 +197,121 @@ def get_guide(slug: str):
         if not guide:
             raise HTTPException(status_code=404, detail="가드닝팁을 찾을 수 없습니다")
         return _guide_detail(guide)
+    finally:
+        db.close()
+
+
+# ── 마이가든 ──────────────────────────────────────────────────────────────────
+# user_id는 Supabase auth.users의 UUID를 클라이언트가 그대로 넘긴다(matmatch/now와 동일 패턴).
+# 저장 목록은 민감정보가 아니고 기존 서비스들도 같은 방식이라 일관성을 위해 맞췄다.
+
+class SaveRequest(BaseModel):
+    user_id: str
+    slug: str
+
+
+def _toggle_save(table: str, slug_column: str, user_id: str, slug: str) -> bool:
+    """이미 저장돼 있으면 해제, 아니면 저장. 반환값은 '지금 저장된 상태인가'."""
+    db = SessionLocal()
+    try:
+        existing = db.execute(
+            text(f"SELECT id FROM {table} WHERE user_id = :uid AND {slug_column} = :slug"),
+            {"uid": user_id, "slug": slug},
+        ).first()
+        if existing:
+            db.execute(
+                text(f"DELETE FROM {table} WHERE user_id = :uid AND {slug_column} = :slug"),
+                {"uid": user_id, "slug": slug},
+            )
+            db.commit()
+            return False
+        db.execute(
+            text(f"INSERT INTO {table} (user_id, {slug_column}) VALUES (:uid, :slug) ON CONFLICT DO NOTHING"),
+            {"uid": user_id, "slug": slug},
+        )
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+@app.post("/api/me/saved-plants/toggle")
+def toggle_saved_plant(req: SaveRequest):
+    return {"saved": _toggle_save("saved_plants", "plant_slug", req.user_id, req.slug)}
+
+
+@app.post("/api/me/saved-guides/toggle")
+def toggle_saved_guide(req: SaveRequest):
+    return {"saved": _toggle_save("saved_guides", "guide_slug", req.user_id, req.slug)}
+
+
+@app.get("/api/me/saved-slugs")
+def list_saved_slugs(user_id: str):
+    """카드/상세페이지의 하트 상태를 한 번에 칠하기 위한 가벼운 응답(슬러그 목록만)."""
+    db = SessionLocal()
+    try:
+        plants = db.execute(
+            text("SELECT plant_slug FROM saved_plants WHERE user_id = :uid"), {"uid": user_id}
+        ).scalars().all()
+        guides = db.execute(
+            text("SELECT guide_slug FROM saved_guides WHERE user_id = :uid"), {"uid": user_id}
+        ).scalars().all()
+        return {"plants": list(plants), "guides": list(guides)}
+    finally:
+        db.close()
+
+
+@app.get("/api/me/garden")
+def get_my_garden(user_id: str):
+    """마이가든 화면 한 번에 채우기 — 저장한 식물/가드닝팁 + 이번 달 알림.
+
+    알림은 별도 테이블 없이 저장한 식물의 bloom_months/planting_months와 현재 월을
+    대조해 매 요청마다 계산한다(정적 데이터라 미리 쌓아둘 이유가 없음)."""
+    db = SessionLocal()
+    try:
+        plant_slugs = db.execute(
+            text("SELECT plant_slug FROM saved_plants WHERE user_id = :uid ORDER BY created_at DESC"),
+            {"uid": user_id},
+        ).scalars().all()
+        guide_slugs = db.execute(
+            text("SELECT guide_slug FROM saved_guides WHERE user_id = :uid ORDER BY created_at DESC"),
+            {"uid": user_id},
+        ).scalars().all()
+
+        plants = db.query(Plant).filter(Plant.slug.in_(plant_slugs)).all() if plant_slugs else []
+        guides = db.query(Guide).filter(Guide.slug.in_(guide_slugs)).all() if guide_slugs else []
+
+        # 저장한 순서(최신순)를 유지 — IN 절 결과는 순서를 보장하지 않음
+        plant_order = {slug: i for i, slug in enumerate(plant_slugs)}
+        guide_order = {slug: i for i, slug in enumerate(guide_slugs)}
+        plants.sort(key=lambda p: plant_order.get(p.slug, 999))
+        guides.sort(key=lambda g: guide_order.get(g.slug, 999))
+
+        month = datetime.now(_KST).month
+        blooming = [{"slug": p.slug, "name_kr": p.name_kr} for p in plants if p.bloom_months and month in p.bloom_months]
+        planting = [{"slug": p.slug, "name_kr": p.name_kr} for p in plants if p.planting_months and month in p.planting_months]
+
+        notices = []
+        if blooming:
+            notices.append({
+                "type": "bloom",
+                "month": month,
+                "items": blooming,
+                "message": f"{month}월, 저장한 식물 중 {len(blooming)}종이 꽃 피는 시기예요",
+            })
+        if planting:
+            notices.append({
+                "type": "planting",
+                "month": month,
+                "items": planting,
+                "message": f"{month}월, 지금 심기 좋은 식물이 {len(planting)}종 있어요",
+            })
+
+        return {
+            "plants": [_summary(p) for p in plants],
+            "guides": [_guide_summary(g) for g in guides],
+            "notices": notices,
+        }
     finally:
         db.close()
 

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
+import SaveButton from "@/components/SaveButton";
 import { getPlant } from "@/lib/api";
 import { getPlantImage } from "@/lib/placeholderImages";
 
@@ -117,6 +118,10 @@ export default async function PlantDetailPage({ params }: Props) {
               {plant.name_en} {plant.scientific_name ? `· ${plant.scientific_name}` : ""}
             </div>
           )}
+
+          <div className="mb-5">
+            <SaveButton kind="plant" slug={plant.slug} variant="inline" />
+          </div>
 
           {plant.tags && plant.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-5">
