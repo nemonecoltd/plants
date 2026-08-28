@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import AdBanner from "@/components/AdBanner";
 import GuideCard from "@/components/GuideCard";
-import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
 import { getGuides, getPlants } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
@@ -63,12 +63,14 @@ export default async function Home() {
               전체보기 →
             </Link>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <HeroGuideCard guide={highlightGuides[0]} className="h-56 sm:h-72 sm:w-1/2" titleClassName="text-base sm:text-lg" />
+          {/* 모바일도 데스크톱과 동일하게 한 줄(왼쪽 큰 카드 + 오른쪽 작은 카드 2개)로 —
+              세로로 두 줄씩 차지하던 걸 줄여 광고·본문이 더 빨리 보이게 함 */}
+          <div className="flex flex-row gap-2 sm:gap-3">
+            <HeroGuideCard guide={highlightGuides[0]} className="h-32 sm:h-72 w-1/2" titleClassName="text-xs sm:text-lg" />
             {highlightGuides.length > 1 && (
-              <div className="flex gap-3 sm:w-1/2 h-40 sm:h-72">
+              <div className="flex gap-2 sm:gap-3 w-1/2 h-32 sm:h-72">
                 {highlightGuides.slice(1, 3).map((g) => (
-                  <HeroGuideCard key={g.slug} guide={g} className="flex-1 h-full" titleClassName="text-xs sm:text-sm" />
+                  <HeroGuideCard key={g.slug} guide={g} className="flex-1 h-full" titleClassName="text-[10px] sm:text-sm" />
                 ))}
               </div>
             )}
@@ -76,10 +78,12 @@ export default async function Home() {
         </section>
       )}
 
-      <main className="max-w-5xl mx-auto px-6">
-        {/* ── 지역 환경 위젯(IP 기반, 비회원도 노출) — 온도/습도에 맞는 식물 추천 ── */}
-        <LocalEnvWidget plants={plants} />
+      {/* ── 오늘의 가드닝팁 바로 아래 광고 — PC/모바일 모두 세로로 커지지 않는 슬림한 가로형 ── */}
+      <section className="max-w-5xl mx-auto px-6 pb-6">
+        <AdBanner dataAdSlot="6819394440" variant="horizontal-slim" />
+      </section>
 
+      <main className="max-w-5xl mx-auto px-6">
         {/* ── 월별 퀵필터(실제 클릭 가능) + 이번 달 개화 식물 ── */}
         <MonthlyPlantSection plants={plants} totalCount={plants.length} initialMonth={currentMonth} />
 

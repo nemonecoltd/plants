@@ -29,3 +29,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 반응형 광고를 구글이 자동으로 세로로 키우지 못하게 미디어쿼리로 높이를 직접 고정
+   (data-ad-format="horizontal" + data-full-width-responsive="false"와 함께 사용) */
+.ad-banner-slim {
+  height: 100px; /* 모바일: 320x100 안팎의 얇은 띠형 */
+}
+@media (min-width: 640px) {
+  .ad-banner-slim {
+    height: 90px; /* 태블릿 이상: 리더보드(728x90) 높이 */
+  }
+}
+@media (min-width: 1024px) {
+  .ad-banner-slim {
+    max-width: 970px;
+    height: 90px; /* 대형 리더보드(970x90), 과도하게 넓어지지 않도록 제한 */
+    margin: 0 auto;
+  }
+}

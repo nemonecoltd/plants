@@ -21,33 +21,24 @@ export default function MonthlyPlantSection({
 
   return (
     <>
-      <section className="py-8 flex flex-col sm:flex-row sm:items-start gap-6">
-        <div className="flex-1">
-          <h2 className="text-sm font-bold text-plant-primary mb-3">월별 추천 식물</h2>
-          <div className="flex flex-wrap gap-2">
-            {MONTHS.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMonth(m)}
-                aria-pressed={m === month}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  m === month
-                    ? "bg-plant-primary text-white border-plant-primary"
-                    : "bg-white text-gray-500 border-gray-200 hover:border-plant-primary hover:text-plant-primary"
-                }`}
-              >
-                {m}월
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full sm:w-56 shrink-0 bg-white rounded-lg border border-dashed border-gray-300 p-4">
-          <div className="text-[11px] font-bold text-gray-400 mb-1">📍 지역별 환경 정보</div>
-          <div className="text-[11px] text-gray-400 leading-relaxed">
-            내 위치의 기온·습도에 맞는 식물 추천 기능을 준비하고 있어요.
-          </div>
+      <section className="py-8">
+        <h2 className="text-sm font-bold text-plant-primary mb-3">월별 추천 식물</h2>
+        <div className="flex flex-wrap gap-2">
+          {MONTHS.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMonth(m)}
+              aria-pressed={m === month}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                m === month
+                  ? "bg-plant-primary text-white border-plant-primary"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-plant-primary hover:text-plant-primary"
+              }`}
+            >
+              {m}월
+            </button>
+          ))}
         </div>
       </section>
 
