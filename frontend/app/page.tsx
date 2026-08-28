@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import GuideCard from "@/components/GuideCard";
+import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
 import { getGuides, getPlants } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
@@ -76,6 +77,9 @@ export default async function Home() {
       )}
 
       <main className="max-w-5xl mx-auto px-6">
+        {/* ── 지역 환경 위젯(IP 기반, 비회원도 노출) — 온도/습도에 맞는 식물 추천 ── */}
+        <LocalEnvWidget plants={plants} />
+
         {/* ── 월별 퀵필터(실제 클릭 가능) + 이번 달 개화 식물 ── */}
         <MonthlyPlantSection plants={plants} totalCount={plants.length} initialMonth={currentMonth} />
 

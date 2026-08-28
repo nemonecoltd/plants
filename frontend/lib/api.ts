@@ -11,6 +11,7 @@ export interface PlantSummary {
   watering_level: string | null;
   image_urls: string[] | null;
   bloom_months: number[] | null;
+  min_temp_c: number | null;
   updated_at: string | null;
 }
 
