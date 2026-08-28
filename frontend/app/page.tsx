@@ -108,9 +108,10 @@ export default async function Home() {
           </section>
         )}
 
-        {/* ── 가드닝팁 미리보기 바로 위 광고 ── */}
+        {/* ── 가드닝팁 미리보기 바로 위 광고 — 원래 월별 추천 식물 그리드 중간에 있던
+             걸 여기로 옮김(MonthlyPlantSection에서 showAd=false로 끔) ── */}
         <section className="pt-4">
-          <AdBanner dataAdSlot="6819394440" variant="horizontal-slim" />
+          <AdBanner dataAdSlot="6819394440" />
         </section>
 
         {/* ── 가드닝팁 미리보기 ── */}

@@ -60,7 +60,8 @@ export default function MonthlyPlantSection({
             </Link>
           </p>
         ) : (
-          <PlantGrid plants={filtered} />
+          // 메인화면은 이 광고를 그리드 중간이 아니라 하단 가드닝팁 위로 옮겨 배치하므로 끔
+          <PlantGrid plants={filtered} showAd={false} />
         )}
       </section>
     </>

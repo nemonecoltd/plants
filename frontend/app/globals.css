@@ -42,8 +42,8 @@ body {
 }
 @media (min-width: 1024px) {
   .ad-banner-slim {
-    max-width: 970px;
-    height: 90px; /* 대형 리더보드(970x90), 과도하게 넓어지지 않도록 제한 */
-    margin: 0 auto;
+    /* 너비는 폭을 임의로 제한하지 않고 다른(auto 방식) 광고처럼 본문
+       레이아웃(max-w-5xl) 너비를 그대로 따라가게 둠 — 높이만 슬림하게 고정 */
+    height: 90px;
   }
 }

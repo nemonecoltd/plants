@@ -9,7 +9,7 @@ import type { PlantSummary } from "@/lib/api";
 // 우연히 같은 숫자(4)로 맞아떨어져 반응형 분기 없이 광고 하나만 심으면 된다.
 const AD_AFTER = 4;
 
-export default function PlantGrid({ plants }: { plants: PlantSummary[] }) {
+export default function PlantGrid({ plants, showAd = true }: { plants: PlantSummary[]; showAd?: boolean }) {
   if (plants.length === 0) {
     return <p className="text-gray-500 text-sm">등록된 식물이 없습니다.</p>;
   }
@@ -17,7 +17,7 @@ export default function PlantGrid({ plants }: { plants: PlantSummary[] }) {
   const nodes: ReactNode[] = [];
   plants.forEach((p, i) => {
     nodes.push(<PlantCard key={p.slug} plant={p} />);
-    if (i + 1 === AD_AFTER) {
+    if (showAd && i + 1 === AD_AFTER) {
       nodes.push(
         <div key="ad" className="col-span-full">
           <AdBanner dataAdSlot="6819394440" />
