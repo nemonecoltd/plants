@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import SaveButton from "@/components/SaveButton";
 import type { GuideSummary } from "@/lib/api";
+import GuideThumb from "@/components/GuideThumb";
 
 export default function GuideCard({ guide }: { guide: GuideSummary }) {
   return (
@@ -12,7 +12,7 @@ export default function GuideCard({ guide }: { guide: GuideSummary }) {
       <SaveButton kind="guide" slug={guide.slug} />
       <div className="relative aspect-[4/3] bg-plant-secondary/10">
         {guide.thumbnail_url ? (
-          <Image src={guide.thumbnail_url} alt={guide.title} fill className="object-cover" />
+          <GuideThumb src={guide.thumbnail_url} alt={guide.title} />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-plant-secondary/40 text-[11px]">
             이미지 준비 중

@@ -326,7 +326,8 @@ def admin_publish_guide(req: GuidePublishRequest):
         thumbnail_url = None
         out_path = generate_thumbnail(slug, req.title, req.category)
         if out_path.exists():
-            thumbnail_url = f"/images/guides/{slug}.png"
+            # 여기서 만든 파일은 배포 산출물에 없어 Next가 서빙하지 못한다(get_guide_image 참고)
+            thumbnail_url = f"/api/guides/image/{slug}.png"
 
         guide = Guide(
             slug=slug,
@@ -382,7 +383,12 @@ def admin_delete_guide(slug: str):
             raise HTTPException(status_code=404, detail="가드닝팁을 찾을 수 없습니다")
         db.delete(guide)
         db.commit()
-        if guide.thumbnail_url and guide.thumbnail_url.startswith("/images/guides/"):
+        # 썸네일 경로가 두 가지(배포 포함분 /images/guides/, 런타임 생성분 /api/guides/image/)라
+        # 둘 다 같은 폴더를 가리키므로 어느 쪽이든 파일명으로 지운다
+        if guide.thumbnail_url and (
+            guide.thumbnail_url.startswith("/images/guides/")
+            or guide.thumbnail_url.startswith("/api/guides/image/")
+        ):
             thumb_path = GUIDES_IMAGE_DIR / Path(guide.thumbnail_url).name
             thumb_path.unlink(missing_ok=True)
         return {"ok": True}
@@ -702,6 +708,27 @@ def _match_plant_slug(db: Session, plant_name: str | None, scientific_name: str 
         {"name": name},
     ).first()
     return row[0] if row else None
+
+
+@app.get("/api/guides/image/{filename}")
+def get_guide_image(filename: str):
+    """관리자가 발행할 때 서버에서 만들어진 가드닝팁 썸네일을 백엔드가 직접 서빙.
+
+    진단 사진과 같은 이유 — Next.js standalone은 빌드 시점 public 파일만 서빙해서,
+    발행 시점에 새로 생성된 썸네일은 다음 배포 전까지 404였다(pm2 error 로그에 실제로
+    "isn't a valid image ... received null"로 남아 있었음).
+
+    저장소에 함께 커밋돼 빌드에 포함된 기존 썸네일들은 `/images/guides/...` 경로 그대로
+    Next가 서빙하는 게 더 빠르므로 건드리지 않는다 — 이 경로는 '런타임 생성분'만 쓴다.
+    """
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,120}\.png", filename):
+        raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다.")
+
+    path = GUIDES_IMAGE_DIR / filename
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다.")
+    # 같은 slug로 다시 발행하면 내용이 바뀔 수 있어 진단 사진(immutable)보다 짧게 잡는다
+    return FileResponse(path, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/api/diagnoses/image/{filename}")

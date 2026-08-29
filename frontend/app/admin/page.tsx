@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { adminListGuides } from "@/lib/adminApi";
 import DeleteGuideButton from "./DeleteGuideButton";
+import GuideThumb from "@/components/GuideThumb";
 
 export default async function AdminGuideListPage() {
   // layout이 화면 출력은 막아주지만, 페이지 컴포넌트 자체는 그와 무관하게 실행되므로
@@ -44,7 +44,7 @@ export default async function AdminGuideListPage() {
             >
               <div className="relative w-20 h-14 shrink-0 rounded overflow-hidden bg-plant-secondary/10">
                 {g.thumbnail_url && (
-                  <Image src={g.thumbnail_url} alt={g.title} fill className="object-cover" />
+                  <GuideThumb src={g.thumbnail_url} alt={g.title} />
                 )}
               </div>
               <div className="flex-1 min-w-0">

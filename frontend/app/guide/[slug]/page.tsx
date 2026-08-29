@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
 import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
 import SaveButton from "@/components/SaveButton";
 import { getAffiliateProducts, getGuide } from "@/lib/api";
+import GuideThumb from "@/components/GuideThumb";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
@@ -109,7 +109,7 @@ export default async function GuideDetailPage({ params }: Props) {
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {guide.thumbnail_url && (
             <div className="relative aspect-[16/9]">
-              <Image src={guide.thumbnail_url} alt={guide.title} fill className="object-cover" priority />
+              <GuideThumb src={guide.thumbnail_url} alt={guide.title} priority />
             </div>
           )}
           <div className="p-6">
@@ -156,6 +156,29 @@ export default async function GuideDetailPage({ params }: Props) {
             )}
           </div>
         </div>
+
+        {/* 증상 글을 읽으러 온 사람에게 가장 자연스러운 다음 행동이 "내 식물도 확인해보기"라
+            본문 바로 뒤에 둔다. 진단 페이지로 내부 링크를 흘려보내는 역할도 겸함. */}
+        <Link
+          href="/diagnose"
+          className="mt-6 flex items-center gap-4 bg-plant-primary rounded-2xl px-5 py-4 no-underline group"
+        >
+          <span className="text-2xl shrink-0" aria-hidden="true">📷</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13px] font-bold text-white leading-snug">
+              우리 집 식물도 이런 상태인가요?
+            </span>
+            <span className="block text-[11px] text-white/70 mt-0.5">
+              사진 한 장으로 지금 상태를 확인해 보세요
+            </span>
+          </span>
+          <span
+            className="text-white/80 text-sm shrink-0 group-hover:translate-x-0.5 transition-transform"
+            aria-hidden="true"
+          >
+            →
+          </span>
+        </Link>
 
         <div className="mt-6 flex flex-col gap-4">
           {/* 상품 추천은 텍스트 위주라 그 아래가 허전해 보여서, 매칭 여부와 상관없이
