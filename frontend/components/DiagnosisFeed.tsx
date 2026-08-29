@@ -23,13 +23,13 @@ export default function DiagnosisFeed({
     <div className={`grid ${columnsClassName} gap-4`}>
       {items.map((d) => {
         const badge = STATUS_BADGE[d.status] ?? STATUS_BADGE.unknown;
-        // 도감에 있는 식물이면 그쪽으로, 아니면 진단 페이지로 보낸다
-        const href = d.matched_plant_slug ? `/plants/${d.matched_plant_slug}` : "/diagnose";
 
         return (
           <Link
             key={d.id}
-            href={href}
+            // 카드를 누르면 진단 전문을 읽을 수 있어야 한다 — 도감으로 바로 보내면
+            // 정작 궁금한 "이 식물이 왜 이런 상태인지"를 못 본 채 넘어간다
+            href={`/diagnose/${d.id}`}
             className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
           >
             <div className="relative aspect-[4/3] bg-plant-secondary/10">

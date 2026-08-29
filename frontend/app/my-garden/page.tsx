@@ -358,12 +358,21 @@ function DiagnosisList({
                   <span className="text-[10px] text-gray-400">
                     {d.created_at ? new Date(d.created_at).toLocaleDateString("ko-KR") : ""}
                   </span>
+                  {/* 공개 상태일 때만 상세 URL이 열린다(비공개는 백엔드가 404) */}
+                  {d.is_public && (
+                    <Link
+                      href={`/diagnose/${d.id}`}
+                      className="text-[10px] text-plant-primary no-underline hover:underline"
+                    >
+                      진단 전문 보기 →
+                    </Link>
+                  )}
                   {d.matched_plant_slug && (
                     <Link
                       href={`/plants/${d.matched_plant_slug}`}
-                      className="text-[10px] text-plant-primary no-underline hover:underline"
+                      className="text-[10px] text-plant-secondary no-underline hover:underline"
                     >
-                      도감 보기 →
+                      도감 →
                     </Link>
                   )}
                   {/* 진단은 기본적으로 익명으로 공개 피드에 올라간다 — 집 안이 찍혔거나

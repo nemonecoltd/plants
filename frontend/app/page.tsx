@@ -5,7 +5,6 @@ import GuideCard from "@/components/GuideCard";
 import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
 import DiagnosisFeed from "@/components/DiagnosisFeed";
-import PageFooterPromo from "@/components/PageFooterPromo";
 import { getDiagnosisFeed, getGuides, getPlants } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
 
@@ -135,10 +134,6 @@ export default async function Home() {
           >
             마이가든 시작하기
           </Link>
-        </section>
-
-        <section className="pb-10">
-          <PageFooterPromo />
         </section>
       </main>
     </div>

@@ -790,6 +790,32 @@ def list_diagnosis_feed(limit: int = 12):
         db.close()
 
 
+@app.get("/api/diagnoses/{diagnosis_id}")
+def get_public_diagnosis(diagnosis_id: int):
+    """공개된 진단 한 건의 전체 내용 — 피드에서 눌러 들어가 실제로 읽는 화면용.
+
+    비공개(is_public=false)면 404로 처리한다: 존재 여부 자체를 알려주지 않기 위해
+    "권한 없음"이 아니라 "없음"으로 응답한다.
+    (경로 선언 순서 주의 — /api/diagnoses/feed 보다 뒤에 와야 feed가 id로 먹히지 않는다)
+    """
+    db = SessionLocal()
+    try:
+        row = db.execute(
+            text(
+                "SELECT id, image_url, plant_name, scientific_name, matched_plant_slug, status, "
+                "headline, body_html, tags, is_public, created_at FROM plant_diagnoses "
+                "WHERE id = :id AND is_public"
+            ),
+            {"id": diagnosis_id},
+        ).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="진단을 찾을 수 없습니다.")
+        # 작성자(user_id)는 조회 자체를 하지 않아 응답에 섞일 여지가 없다
+        return _diagnosis_row(row)
+    finally:
+        db.close()
+
+
 class DiagnosisVisibilityRequest(BaseModel):
     user_id: str
     is_public: bool

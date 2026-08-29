@@ -149,3 +149,8 @@ export async function getDiagnosisFeed(limit = 12): Promise<DiagnosisFeedItem[]>
   const data = await fetchApi<{ items: DiagnosisFeedItem[] }>(`/api/diagnoses/feed?limit=${limit}`);
   return data?.items ?? [];
 }
+
+// 공개된 진단 한 건 — 비공개거나 없는 id면 null(상세 페이지에서 404 처리)
+export async function getDiagnosis(id: number): Promise<Diagnosis | null> {
+  return fetchApi<Diagnosis>(`/api/diagnoses/${id}`);
+}
