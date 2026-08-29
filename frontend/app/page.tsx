@@ -93,8 +93,9 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ── 오늘의 가드닝팁 바로 아래 광고 — PC/모바일 모두 세로로 커지지 않는 슬림한 가로형 ── */}
-      <section className="max-w-5xl mx-auto px-6 pb-6">
+      {/* ── 오늘의 가드닝팁 바로 아래 광고 — PC/모바일 모두 세로로 커지지 않는 슬림한 가로형 ──
+           모바일은 화면이 좁아 아래 위젯과의 공백이 크게 도드라져서 pb를 줄임 */}
+      <section className="max-w-5xl mx-auto px-6 pb-3 sm:pb-6">
         <AdBanner dataAdSlot="6819394440" variant="horizontal-slim" />
       </section>
 

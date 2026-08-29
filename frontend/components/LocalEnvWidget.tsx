@@ -177,7 +177,7 @@ export default async function LocalEnvWidget({ plants }: { plants: PlantSummary[
   const cityName = localizeCity(geo);
 
   return (
-    <section className="py-8 border-t border-gray-200">
+    <section className="py-4 sm:py-8 border-t border-gray-200">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-xs font-bold text-plant-secondary">📍 {cityName}</span>
         <span className="text-xs text-gray-400">
