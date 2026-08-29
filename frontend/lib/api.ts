@@ -96,3 +96,15 @@ export async function getGuideTags(): Promise<GuideTag[]> {
 export async function getGuide(slug: string): Promise<GuideDetail | null> {
   return fetchApi<GuideDetail>(`/api/guides/${slug}`);
 }
+
+export interface AffiliateProduct {
+  id: number;
+  label: string;
+  coupang_url: string;
+  match_keywords: string[];
+}
+
+export async function getAffiliateProducts(): Promise<AffiliateProduct[]> {
+  const data = await fetchApi<{ items: AffiliateProduct[] }>("/api/affiliate-products");
+  return data?.items ?? [];
+}

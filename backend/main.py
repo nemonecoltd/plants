@@ -86,6 +86,19 @@ class Plant(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class AffiliateProduct(Base):
+    __tablename__ = "affiliate_products"
+
+    id = Column(Integer, primary_key=True)
+    label = Column(String, nullable=False)
+    coupang_url = Column(String, nullable=False)
+    match_keywords = Column(ARRAY(String), nullable=False, server_default=text("'{}'"))
+    sort_order = Column(Integer, nullable=False, server_default=text("0"))
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 app = FastAPI(title="NEMONE PLANTS API")
 
 app.add_middleware(
@@ -367,6 +380,99 @@ def admin_delete_guide(slug: str):
         if guide.thumbnail_url and guide.thumbnail_url.startswith("/images/guides/"):
             thumb_path = GUIDES_IMAGE_DIR / Path(guide.thumbnail_url).name
             thumb_path.unlink(missing_ok=True)
+        return {"ok": True}
+    finally:
+        db.close()
+
+
+# ── 쿠팡 파트너스 상품 추천 ──────────────────────────────────────────────────
+# 태그/제목과 느슨하게 부분일치시켜 보여주는 용도라 매칭 로직은 프론트에 둔다
+# (백엔드는 활성 상품 전체 + 매칭 키워드만 내려줌).
+
+def _affiliate_product_summary(p: AffiliateProduct) -> dict:
+    return {
+        "id": p.id,
+        "label": p.label,
+        "coupang_url": p.coupang_url,
+        "match_keywords": p.match_keywords or [],
+    }
+
+
+@app.get("/api/affiliate-products")
+def list_affiliate_products():
+    db = SessionLocal()
+    try:
+        products = (
+            db.query(AffiliateProduct)
+            .filter(AffiliateProduct.is_active.is_(True))
+            .order_by(AffiliateProduct.sort_order)
+            .all()
+        )
+        return {"items": [_affiliate_product_summary(p) for p in products]}
+    finally:
+        db.close()
+
+
+class AffiliateProductRequest(BaseModel):
+    label: str
+    coupang_url: str
+    match_keywords: List[str] = []
+    sort_order: int = 0
+    is_active: bool = True
+
+
+@app.get("/api/admin/affiliate-products", dependencies=[Depends(verify_admin)])
+def admin_list_affiliate_products():
+    db = SessionLocal()
+    try:
+        products = db.query(AffiliateProduct).order_by(AffiliateProduct.sort_order).all()
+        return {
+            "items": [
+                {**_affiliate_product_summary(p), "is_active": p.is_active}
+                for p in products
+            ]
+        }
+    finally:
+        db.close()
+
+
+@app.post("/api/admin/affiliate-products", dependencies=[Depends(verify_admin)])
+def admin_create_affiliate_product(req: AffiliateProductRequest):
+    db = SessionLocal()
+    try:
+        p = AffiliateProduct(**req.dict())
+        db.add(p)
+        db.commit()
+        return {"id": p.id}
+    finally:
+        db.close()
+
+
+@app.put("/api/admin/affiliate-products/{product_id}", dependencies=[Depends(verify_admin)])
+def admin_update_affiliate_product(product_id: int, req: AffiliateProductRequest):
+    db = SessionLocal()
+    try:
+        p = db.query(AffiliateProduct).filter(AffiliateProduct.id == product_id).first()
+        if not p:
+            raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다")
+        for k, v in req.dict().items():
+            setattr(p, k, v)
+        p.updated_at = datetime.now(_KST)
+        db.commit()
+        return {"id": p.id}
+    finally:
+        db.close()
+
+
+@app.delete("/api/admin/affiliate-products/{product_id}", dependencies=[Depends(verify_admin)])
+def admin_delete_affiliate_product(product_id: int):
+    db = SessionLocal()
+    try:
+        p = db.query(AffiliateProduct).filter(AffiliateProduct.id == product_id).first()
+        if not p:
+            raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다")
+        db.delete(p)
+        db.commit()
         return {"ok": True}
     finally:
         db.close()

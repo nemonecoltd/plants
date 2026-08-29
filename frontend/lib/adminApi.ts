@@ -81,3 +81,36 @@ export async function adminUpdateGuide(slug: string, payload: GuidePublishPayloa
 export async function adminDeleteGuide(slug: string): Promise<void> {
   await adminFetch<{ ok: boolean }>(`/api/admin/guides/${slug}`, { method: "DELETE" });
 }
+
+export interface AdminAffiliateProduct {
+  id: number;
+  label: string;
+  coupang_url: string;
+  match_keywords: string[];
+  is_active: boolean;
+}
+
+export interface AffiliateProductPayload {
+  label: string;
+  coupang_url: string;
+  match_keywords: string[];
+  sort_order: number;
+  is_active: boolean;
+}
+
+export async function adminListAffiliateProducts(): Promise<AdminAffiliateProduct[]> {
+  const data = await adminFetch<{ items: AdminAffiliateProduct[] }>("/api/admin/affiliate-products");
+  return data.items;
+}
+
+export async function adminCreateAffiliateProduct(payload: AffiliateProductPayload): Promise<{ id: number }> {
+  return adminFetch<{ id: number }>("/api/admin/affiliate-products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminDeleteAffiliateProduct(id: number): Promise<void> {
+  await adminFetch<{ ok: boolean }>(`/api/admin/affiliate-products/${id}`, { method: "DELETE" });
+}

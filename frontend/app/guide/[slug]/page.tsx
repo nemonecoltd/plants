@@ -3,8 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
+import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
 import SaveButton from "@/components/SaveButton";
-import { getGuide } from "@/lib/api";
+import { getAffiliateProducts, getGuide } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
@@ -66,6 +67,9 @@ export default async function GuideDetailPage({ params }: Props) {
   }
 
   const isOriginal = guide.source === "original";
+  const affiliateProducts = await getAffiliateProducts();
+  const haystack = [guide.title, guide.summary ?? "", guide.category ?? "", ...guide.tags].join(" ");
+  const matchedProducts = matchProducts(affiliateProducts, haystack);
 
   // 수집분은 "만드는 법" 성격이라 HowTo가 맞지만, 자체 글은 설명형 아티클이라 Article이 맞다.
   const jsonLd = isOriginal
@@ -154,7 +158,13 @@ export default async function GuideDetailPage({ params }: Props) {
         </div>
 
         <div className="mt-6">
-          <AdBanner dataAdSlot="6819394440" />
+          {/* 태그와 매칭되는 상품이 있으면 광고 대신 상품 추천을 보여줌 —
+              광고를 더 쌓지 않고 기존 하단 슬롯을 맥락에 맞는 걸로 교체 */}
+          {matchedProducts.length > 0 ? (
+            <ProductRecommendation products={matchedProducts} />
+          ) : (
+            <AdBanner dataAdSlot="6819394440" />
+          )}
         </div>
       </main>
     </div>

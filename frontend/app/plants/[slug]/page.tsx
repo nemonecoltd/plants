@@ -3,8 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
+import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
 import SaveButton from "@/components/SaveButton";
-import { getPlant } from "@/lib/api";
+import { getAffiliateProducts, getPlant } from "@/lib/api";
 import { getPlantImage } from "@/lib/placeholderImages";
 
 const SITE_URL = "https://plants.nemoneai.com";
@@ -76,6 +77,13 @@ export default async function PlantDetailPage({ params }: Props) {
   }
 
   const image = getPlantImage(plant);
+  const affiliateProducts = await getAffiliateProducts();
+  const plantHaystack = [
+    plant.category ?? "",
+    plant.sunlight ? SUNLIGHT_LABEL[plant.sunlight] ?? plant.sunlight : "",
+    plant.watering_level ? WATERING_LABEL[plant.watering_level] ?? plant.watering_level : "",
+  ].join(" ");
+  const matchedProducts = matchProducts(affiliateProducts, plantHaystack);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -231,7 +239,11 @@ export default async function PlantDetailPage({ params }: Props) {
         </div>
 
         <div className="mt-6">
-          <AdBanner dataAdSlot="6819394440" />
+          {matchedProducts.length > 0 ? (
+            <ProductRecommendation products={matchedProducts} />
+          ) : (
+            <AdBanner dataAdSlot="6819394440" />
+          )}
         </div>
       </main>
     </div>

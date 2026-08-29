@@ -17,12 +17,20 @@ export default async function AdminGuideListPage() {
     <main className="max-w-4xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-lg font-bold text-plant-primary">콘텐츠 관리 ({guides.length})</h1>
-        <Link
-          href="/admin/new"
-          className="inline-block px-4 py-2 rounded-full bg-plant-primary text-white text-sm font-bold no-underline hover:opacity-90 transition-opacity"
-        >
-          + 생성
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/products"
+            className="inline-block px-4 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium no-underline hover:border-plant-primary hover:text-plant-primary transition-colors"
+          >
+            🛒 상품 관리
+          </Link>
+          <Link
+            href="/admin/new"
+            className="inline-block px-4 py-2 rounded-full bg-plant-primary text-white text-sm font-bold no-underline hover:opacity-90 transition-opacity"
+          >
+            + 생성
+          </Link>
+        </div>
       </div>
 
       {guides.length === 0 ? (
