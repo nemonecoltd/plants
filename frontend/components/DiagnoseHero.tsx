@@ -43,9 +43,19 @@ export default function DiagnoseHero() {
             </span>
           </div>
 
-          {/* 모바일에서는 문구가 우선이라 숨기고, 넓은 화면에서만 아이콘을 보인다 */}
+          {/* 모바일에서는 문구가 우선이라 숨기고, 넓은 화면에서만 아이콘을 보인다.
+              이모지는 폰트마다 렌더링이 달라(일부는 색이 들어간 그림으로 나옴) 브랜드
+              톤과 안 맞아서, BottomNav의 진단 탭과 같은 선 스타일 SVG로 통일함 */}
           <div className="hidden sm:flex w-24 h-24 rounded-2xl bg-white/10 items-center justify-center shrink-0">
-            <span className="text-4xl" aria-hidden="true">📷</span>
+            <svg
+              viewBox="0 0 24 24"
+              className="w-10 h-10"
+              style={{ stroke: "white", strokeWidth: 1.5, fill: "none" }}
+              aria-hidden="true"
+            >
+              <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2a1 1 0 0 0 .84-.46l.92-1.42A1 1 0 0 1 9.3 4.7h5.4a1 1 0 0 1 .84.42l.92 1.42a1 1 0 0 0 .84.46h2.2A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-9Z" strokeLinejoin="round" />
+              <circle cx="12" cy="13" r="3.2" />
+            </svg>
           </div>
         </div>
       </Link>

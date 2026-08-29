@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
 import GuideCard from "@/components/GuideCard";
 import type { GuideSummary, GuideTag } from "@/lib/api";
+
+const PAGE_SIZE = 24;
 
 function matches(guide: GuideSummary, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -23,10 +25,20 @@ const VISIBLE_TAG_COUNT = 4;
 export default function GuideListClient({ guides, tags }: { guides: GuideSummary[]; tags: GuideTag[] }) {
   const [query, setQuery] = useState("");
   const [showAllTags, setShowAllTags] = useState(false);
+  const [page, setPage] = useState(1);
   const filtered = useMemo(() => guides.filter((g) => matches(g, query)), [guides, query]);
   const visibleTags = showAllTags ? tags : tags.slice(0, VISIBLE_TAG_COUNT);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const nodes = filtered.flatMap((g, i) => {
+  // 이 페이지는 전체 목록을 클라이언트에서 실시간으로 검색하는 구조라(=서버 왕복 없음)
+  // 검색어가 바뀌면 페이지네이션도 1페이지로 되돌려야 "검색했더니 빈 3페이지가
+  // 보이는" 상황을 피할 수 있다
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const nodes = visible.flatMap((g, i) => {
     const card = <GuideCard key={g.slug} guide={g} />;
     if (i + 1 !== 4) return [card];
     return [
@@ -92,7 +104,35 @@ export default function GuideListClient({ guides, tags }: { guides: GuideSummary
       {filtered.length === 0 ? (
         <p className="text-gray-500 text-sm">&quot;{query}&quot;에 해당하는 가드닝팁이 없습니다.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">{nodes}</div>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">{nodes}</div>
+          {/* URL 쿼리가 아니라 이 컴포넌트의 상태로만 페이지를 넘긴다(검색이 클라이언트
+              실시간 필터라 서버 왕복이 없어서) — 공용 Pagination(Link 기반)과는
+              별개로 버튼 기반을 여기서 직접 둔다 */}
+          {totalPages > 1 && (
+            <nav className="flex items-center justify-center gap-3 mt-8" aria-label="페이지 이동">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="text-xs font-medium px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-plant-primary hover:text-plant-primary disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+              >
+                ← 이전
+              </button>
+              <span className="text-xs text-gray-400 tabular-nums">
+                {page} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="text-xs font-medium px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:border-plant-primary hover:text-plant-primary disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+              >
+                다음 →
+              </button>
+            </nav>
+          )}
+        </>
       )}
     </>
   );

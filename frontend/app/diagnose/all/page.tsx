@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DiagnosisFeed from "@/components/DiagnosisFeed";
 import PageFooterPromo from "@/components/PageFooterPromo";
+import Pagination from "@/components/Pagination";
 import { getDiagnosisFeedPage } from "@/lib/api";
 
 const PAGE_SIZE = 24;
@@ -56,33 +57,11 @@ export default async function DiagnosisAllPage({ searchParams }: Props) {
           <DiagnosisFeed items={items} columnsClassName="grid-cols-2 sm:grid-cols-4" />
         )}
 
-        {totalPages > 1 && (
-          <nav className="flex items-center justify-center gap-3 mt-8" aria-label="페이지 이동">
-            {page > 1 ? (
-              <Link
-                href={page === 2 ? "/diagnose/all" : `/diagnose/all?page=${page - 1}`}
-                className="text-xs font-medium px-4 py-2 rounded-full border border-gray-200 text-gray-600 no-underline hover:border-plant-primary hover:text-plant-primary"
-              >
-                ← 이전
-              </Link>
-            ) : (
-              <span className="text-xs px-4 py-2 text-gray-300">← 이전</span>
-            )}
-            <span className="text-xs text-gray-400 tabular-nums">
-              {page} / {totalPages}
-            </span>
-            {page < totalPages ? (
-              <Link
-                href={`/diagnose/all?page=${page + 1}`}
-                className="text-xs font-medium px-4 py-2 rounded-full border border-gray-200 text-gray-600 no-underline hover:border-plant-primary hover:text-plant-primary"
-              >
-                다음 →
-              </Link>
-            ) : (
-              <span className="text-xs px-4 py-2 text-gray-300">다음 →</span>
-            )}
-          </nav>
-        )}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          buildHref={(p) => (p === 1 ? "/diagnose/all" : `/diagnose/all?page=${p}`)}
+        />
 
         <section className="mt-10">
           <PageFooterPromo />

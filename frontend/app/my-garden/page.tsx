@@ -9,11 +9,12 @@ import { useSaved } from "@/components/SavedProvider";
 import type { Diagnosis, GuideSummary, PlantSummary } from "@/lib/api";
 
 // 계정 하나로 여러 서비스를 쓰는데 이동 동선이 없어서 하단에 배치(AIM/PACE 마이페이지와 동일).
-// PLANTS는 이 페이지 자신이라 제외, MSM은 아직 통합 인증 대상이 아니지만 서비스 소개 차원에서 포함.
+// PLANTS는 이 페이지 자신이라 제외. 와랑스튜디오는 통합 인증 대상은 아니지만
+// home.nemoneai.com에 소개된 네모네 랩 프로젝트라 서비스 소개 차원에서 포함(2026-08-30, MSM 대체).
 const NEMONE_SERVICES = [
   { name: '네모네AIM', href: "https://nemoneai.com", icon: "📰", desc: "당신 시간의 알찬 소비" },
   { name: "NEMONE PACE", href: "https://now.nemoneai.com", icon: "🗺️", desc: "당신의 다음 3시간을 설계합니다" },
-  { name: "NEMONE MSM", href: "https://msm.nemoneai.com", icon: "📈", desc: "국내 주식 AI 분석" },
+  { name: "와랑스튜디오", href: "https://naver.me/FDGH15XY", icon: "🌿", desc: "제주 · NEMONE LAB" },
 ];
 
 type Notice = {

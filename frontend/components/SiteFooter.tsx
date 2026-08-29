@@ -2,7 +2,7 @@ const NAV_LINKS = [
   { name: "ABOUT", href: "https://home.nemoneai.com" },
   { name: "네모네AIM", href: "https://nemoneai.com" },
   { name: "NEMONE PACE", href: "https://now.nemoneai.com" },
-  { name: "NEMONE MSM", href: "https://msm.nemoneai.com" },
+  { name: "와랑 스튜디오", href: "https://naver.me/FDGH15XY" },
 ];
 
 export default function SiteFooter() {
@@ -14,7 +14,7 @@ export default function SiteFooter() {
             NEMONE PLANTS
           </span>
           <span className="text-[10px] font-bold text-gray-500 tracking-wide">
-            초보집사의 성장을 응원합니다.
+            당신과 식물이 함께 자라는 시간
           </span>
           <span className="text-[9px] font-bold text-gray-400 tracking-widest uppercase mt-1">
             © NEMONE INC. ALL RIGHTS RESERVED.
