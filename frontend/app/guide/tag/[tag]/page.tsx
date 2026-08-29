@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import AdBanner from "@/components/AdBanner";
 import GuideCard from "@/components/GuideCard";
 import { getGuides, getGuideTags } from "@/lib/api";
+import PageFooterPromo from "@/components/PageFooterPromo";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
@@ -57,7 +57,8 @@ export default async function GuideTagPage({ params }: Props) {
         </div>
 
         <div className="mt-8">
-          <AdBanner dataAdSlot="6819394440" />
+          {/* 태그 자체가 문맥이라(예: 과습, 병충해) 그에 맞는 용품이 매칭된다 */}
+          <PageFooterPromo haystack={decoded} />
         </div>
 
         {otherTags.length > 0 && (

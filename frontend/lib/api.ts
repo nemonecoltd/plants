@@ -123,10 +123,29 @@ export interface Diagnosis {
   headline: string | null;
   body_html: string | null;
   tags: string[];
+  // 공개 피드에 노출할지 — 마이가든에서 사용자가 직접 내릴 수 있다
+  is_public: boolean;
   created_at: string | null;
 }
 
 export interface DiagnosisResponse extends Diagnosis {
   remaining_today: number;
   daily_limit: number;
+}
+
+// 공개 피드용 — 작성자를 특정할 수 있는 값은 서버가 아예 내려주지 않는다(익명)
+export interface DiagnosisFeedItem {
+  id: number;
+  image_url: string;
+  plant_name: string | null;
+  matched_plant_slug: string | null;
+  status: DiagnosisStatus;
+  headline: string | null;
+  tags: string[];
+  created_at: string | null;
+}
+
+export async function getDiagnosisFeed(limit = 12): Promise<DiagnosisFeedItem[]> {
+  const data = await fetchApi<{ items: DiagnosisFeedItem[] }>(`/api/diagnoses/feed?limit=${limit}`);
+  return data?.items ?? [];
 }

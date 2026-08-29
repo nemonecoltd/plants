@@ -663,6 +663,21 @@ def _diagnosis_row(row) -> dict:
         "headline": row.headline,
         "body_html": row.body_html,
         "tags": list(row.tags or []),
+        "is_public": bool(getattr(row, "is_public", True)),
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+def _feed_row(row) -> dict:
+    """공개 피드용 — 작성자를 특정할 수 있는 값(user_id)은 절대 넣지 않는다(익명 공개)."""
+    return {
+        "id": row.id,
+        "image_url": row.image_url,
+        "plant_name": row.plant_name,
+        "matched_plant_slug": row.matched_plant_slug,
+        "status": row.status,
+        "headline": row.headline,
+        "tags": list(row.tags or []),
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
 
@@ -751,6 +766,55 @@ def get_diagnosis_image(filename: str):
     return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
+@app.get("/api/diagnoses/feed")
+def list_diagnosis_feed(limit: int = 12):
+    """다른 사람의 진단까지 함께 보는 공개 피드 — 로그인 없이도 볼 수 있다.
+
+    작성자는 표시하지 않는다(익명). 사용자가 마이가든에서 내리면(is_public=false)
+    즉시 빠진다. 식별 불가(unknown) 진단은 보여줄 내용이 사실상 없어 제외.
+    """
+    limit = max(1, min(limit, 50))
+    db = SessionLocal()
+    try:
+        rows = db.execute(
+            text(
+                "SELECT id, image_url, plant_name, matched_plant_slug, status, headline, tags, created_at "
+                "FROM plant_diagnoses "
+                "WHERE is_public AND status <> 'unknown' "
+                "ORDER BY created_at DESC LIMIT :limit"
+            ),
+            {"limit": limit},
+        ).all()
+        return {"items": [_feed_row(r) for r in rows]}
+    finally:
+        db.close()
+
+
+class DiagnosisVisibilityRequest(BaseModel):
+    user_id: str
+    is_public: bool
+
+
+@app.patch("/api/me/diagnoses/{diagnosis_id}/visibility")
+def update_diagnosis_visibility(diagnosis_id: int, req: DiagnosisVisibilityRequest):
+    """공개 피드에 내 진단을 올릴지 내릴지 — 본인 기록만 바꿀 수 있다."""
+    db = SessionLocal()
+    try:
+        row = db.execute(
+            text(
+                "UPDATE plant_diagnoses SET is_public = :pub "
+                "WHERE id = :id AND user_id = :uid RETURNING id"
+            ),
+            {"pub": req.is_public, "id": diagnosis_id, "uid": req.user_id},
+        ).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="진단 기록을 찾을 수 없습니다.")
+        db.commit()
+        return {"id": row[0], "is_public": req.is_public}
+    finally:
+        db.close()
+
+
 @app.get("/api/me/diagnoses")
 def list_diagnoses(user_id: str):
     """마이가든의 'AI 진단' 탭 — 내 진단 기록(최신순) + 오늘 남은 횟수."""
@@ -759,7 +823,7 @@ def list_diagnoses(user_id: str):
         rows = db.execute(
             text(
                 "SELECT id, image_url, plant_name, scientific_name, matched_plant_slug, status, "
-                "headline, body_html, tags, created_at FROM plant_diagnoses "
+                "headline, body_html, tags, is_public, created_at FROM plant_diagnoses "
                 "WHERE user_id = :uid ORDER BY created_at DESC"
             ),
             {"uid": user_id},
@@ -829,7 +893,7 @@ async def create_diagnosis(user_id: str = Form(...), file: UploadFile = File(...
                 " headline, body_md, body_html, tags) "
                 "VALUES (:uid, :img, :name, :sci, :slug, :status, :headline, :md, :html, :tags) "
                 "RETURNING id, image_url, plant_name, scientific_name, matched_plant_slug, status, "
-                "          headline, body_html, tags, created_at"
+                "          headline, body_html, tags, is_public, created_at"
             ),
             {
                 "uid": user_id,

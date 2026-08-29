@@ -67,6 +67,21 @@ export default function MyGardenPage() {
     }
   }, [user]);
 
+  const toggleVisibility = useCallback(
+    async (id: number, next: boolean) => {
+      if (!user) return;
+      const before = diagnoses;
+      setDiagnoses((list) => list.map((d) => (d.id === id ? { ...d, is_public: next } : d)));
+      const res = await fetch(`/api/me/diagnoses/${id}/visibility`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, is_public: next }),
+      });
+      if (!res.ok) setDiagnoses(before);
+    },
+    [user, diagnoses]
+  );
+
   const removeDiagnosis = useCallback(
     async (id: number) => {
       if (!user) return;
@@ -215,7 +230,12 @@ export default function MyGardenPage() {
         </div>
 
         {tab === "diagnoses" ? (
-          <DiagnosisList items={diagnoses} remaining={remaining} onDelete={removeDiagnosis} />
+          <DiagnosisList
+            items={diagnoses}
+            remaining={remaining}
+            onDelete={removeDiagnosis}
+            onToggleVisibility={toggleVisibility}
+          />
         ) : tab === "plants" ? (
           visiblePlants.length === 0 ? (
             <EmptyState
@@ -277,10 +297,12 @@ function DiagnosisList({
   items,
   remaining,
   onDelete,
+  onToggleVisibility,
 }: {
   items: Diagnosis[];
   remaining: number | null;
   onDelete: (id: number) => void;
+  onToggleVisibility: (id: number, next: boolean) => void;
 }) {
   if (items.length === 0) {
     return (
@@ -344,10 +366,24 @@ function DiagnosisList({
                       도감 보기 →
                     </Link>
                   )}
+                  {/* 진단은 기본적으로 익명으로 공개 피드에 올라간다 — 집 안이 찍혔거나
+                      보여주고 싶지 않으면 여기서 바로 내릴 수 있게 함 */}
+                  <button
+                    type="button"
+                    onClick={() => onToggleVisibility(d.id, !d.is_public)}
+                    aria-pressed={d.is_public}
+                    className={`text-[10px] ml-auto ${
+                      d.is_public
+                        ? "text-plant-secondary hover:text-plant-primary"
+                        : "text-gray-400 hover:text-plant-primary"
+                    }`}
+                  >
+                    {d.is_public ? "공개 중 · 내리기" : "비공개 · 공개하기"}
+                  </button>
                   <button
                     type="button"
                     onClick={() => onDelete(d.id)}
-                    className="text-[10px] text-gray-300 hover:text-red-500 ml-auto"
+                    className="text-[10px] text-gray-300 hover:text-red-500"
                   >
                     삭제
                   </button>

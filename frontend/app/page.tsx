@@ -1,51 +1,25 @@
-import Image from "next/image";
 import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
 import DiagnoseHero from "@/components/DiagnoseHero";
 import GuideCard from "@/components/GuideCard";
 import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
-import { getGuides, getPlants } from "@/lib/api";
+import DiagnosisFeed from "@/components/DiagnosisFeed";
+import PageFooterPromo from "@/components/PageFooterPromo";
+import { getDiagnosisFeed, getGuides, getPlants } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
-// 랜덤으로 뽑다 보면 같은 카테고리(예: 채소)가 3개 중 2~3개를 차지해 다양성이
-// 떨어지는 경우가 있어, 카테고리당 최대 1개만 뽑히도록 제한
-function pickDiverseGuides(guides: GuideSummary[], count: number): GuideSummary[] {
-  const shuffled = [...guides].sort(() => Math.random() - 0.5);
-  const seen = new Set<string>();
-  const picked: GuideSummary[] = [];
-  for (const g of shuffled) {
-    const key = g.category ?? `__uncategorized_${g.slug}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    picked.push(g);
-    if (picked.length >= count) break;
-  }
-  return picked;
-}
-
-// 관리자가 "메인 고정" 체크한 글이 있으면 히어로 0번 자리에 우선 배치. 여러 개가
-// 동시에 체크돼 있어도(편집 화면에서 막지 않음) 에러 없이 가장 최근에 수정된
-// 것으로 정리한다.
-function pickHighlightGuides(guides: GuideSummary[], count: number): GuideSummary[] {
-  const pinned = guides
-    .filter((g) => g.is_hero)
-    .sort((a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime())[0];
-
-  if (!pinned) return pickDiverseGuides(guides, count);
-
-  const rest = guides.filter((g) => g.slug !== pinned.slug);
-  return [pinned, ...pickDiverseGuides(rest, count - 1)];
-}
-
 export default async function Home() {
-  const [plants, guides] = await Promise.all([getPlants(), getGuides()]);
-  const recentGuides = guides.slice(0, 3);
-  // 상단 노출용 랜덤 3개(1개 크게 + 2개 가로, 카테고리 중복 없이) — 매 요청마다
-  // 다른 팁을 보여줘 반복 방문 시에도 신선하게 느껴지도록 함
-  const highlightGuides = pickHighlightGuides(guides, 3);
+  // PC 3개 / 모바일 2개를 채우되, 비공개 전환 등으로 줄어들 수 있어 조금 여유있게 받는다
+  const [plants, guides, feedAll] = await Promise.all([getPlants(), getGuides(), getDiagnosisFeed(6)]);
+  const feedItems = feedAll.slice(0, 3);
+  // 상단 '오늘의 가드닝팁'을 없애면서 관리자의 "메인 고정"(is_hero)이 갈 곳이 없어져,
+  // 하단 가드닝팁 섹션이 고정글을 맨 앞에 올리도록 해 기능을 살려둔다.
+  const recentGuides = [...guides]
+    .sort((a, b) => Number(b.is_hero) - Number(a.is_hero))
+    .slice(0, 3);
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
 
@@ -76,31 +50,23 @@ export default async function Home() {
           기존 '오늘의 가드닝팁'보다 위에 배치 */}
       <DiagnoseHero />
 
-      {/* ── 가드닝팁 하이라이트(랜덤 3개: 왼쪽 1개 크게 + 오른쪽 2개 가로) ── */}
-      {highlightGuides.length > 0 && (
+      {/* ── 다른 사람들의 진단 — 진단하기 바로 아래에서 "이 서비스가 실제로 이렇게 쓰인다"를
+             보여주는 자리. 원래 여기 있던 '오늘의 가드닝팁'은 같은 페이지 하단 '가드닝팁'
+             섹션(3개)과 내용이 겹쳐 제거했다. ── */}
+      {feedItems.length > 0 && (
         <section className="max-w-5xl mx-auto px-6 pt-8 pb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-plant-primary">🌱 오늘의 가드닝팁</h2>
-            <Link href="/guide" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
-              전체보기 →
+            <h2 className="text-sm font-bold text-plant-primary">🪴 방금 진단받은 식물들</h2>
+            <Link href="/diagnose" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
+              더보기 →
             </Link>
           </div>
-          {/* 모바일은 카드 1개만(작은 카드 2개는 너무 좁아져 가독성이 떨어짐),
-              데스크톱은 기존대로 왼쪽 큰 카드 + 오른쪽 작은 카드 2개 */}
-          <div className="flex flex-row gap-3">
-            <HeroGuideCard guide={highlightGuides[0]} className="h-56 sm:h-72 w-full sm:w-1/2" titleClassName="text-base sm:text-lg" />
-            {highlightGuides.length > 1 && (
-              <div className="hidden sm:flex gap-3 sm:w-1/2 h-72">
-                {highlightGuides.slice(1, 3).map((g) => (
-                  <HeroGuideCard key={g.slug} guide={g} className="flex-1 h-full" titleClassName="text-xs sm:text-sm" />
-                ))}
-              </div>
-            )}
-          </div>
+          {/* 모바일 2개 / PC 3개 */}
+          <DiagnosisFeed items={feedItems} columnsClassName="grid-cols-2 sm:grid-cols-3" />
         </section>
       )}
 
-      {/* ── 오늘의 가드닝팁 바로 아래 광고 — PC/모바일 모두 세로로 커지지 않는 슬림한 가로형 ──
+      {/* ── 진단 피드 아래 광고 — PC/모바일 모두 세로로 커지지 않는 슬림한 가로형 ──
            모바일은 화면이 좁아 아래 위젯과의 공백이 크게 도드라져서 pb를 줄임 */}
       <section className="max-w-5xl mx-auto px-6 pb-3 sm:pb-6">
         <AdBanner dataAdSlot="6819394440" variant="horizontal-slim" />
@@ -170,40 +136,11 @@ export default async function Home() {
             마이가든 시작하기
           </Link>
         </section>
+
+        <section className="pb-10">
+          <PageFooterPromo />
+        </section>
       </main>
     </div>
-  );
-}
-
-function HeroGuideCard({
-  guide,
-  className,
-  titleClassName,
-}: {
-  guide: GuideSummary;
-  className: string;
-  titleClassName: string;
-}) {
-  return (
-    <Link
-      href={`/guide/${guide.slug}`}
-      className={`relative block rounded-lg overflow-hidden no-underline group ${className}`}
-    >
-      {guide.thumbnail_url ? (
-        <Image
-          src={guide.thumbnail_url}
-          alt={guide.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-plant-secondary/20" />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
-        {guide.category && <div className="text-[10px] opacity-80 mb-0.5">{guide.category}</div>}
-        <div className={`font-bold leading-snug line-clamp-2 ${titleClassName}`}>{guide.title}</div>
-      </div>
-    </Link>
   );
 }

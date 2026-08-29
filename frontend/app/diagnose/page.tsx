@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import AdBanner from "@/components/AdBanner";
 import GuideCard from "@/components/GuideCard";
 import PlantDoctor from "@/components/PlantDoctor";
-import { getGuides } from "@/lib/api";
+import DiagnosisFeed from "@/components/DiagnosisFeed";
+import PageFooterPromo from "@/components/PageFooterPromo";
+import { getDiagnosisFeed, getGuides } from "@/lib/api";
 import { SYMPTOMS } from "./symptoms";
 
 const SITE_URL = "https://plants.nemoneai.com";
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
 const COMMON_SYMPTOM_TAGS = ["과습", "병충해", "분갈이", "물주기", "잎 노랗게"];
 
 export default async function DiagnosePage() {
-  const guides = await getGuides();
+  const [guides, feedItems] = await Promise.all([getGuides(), getDiagnosisFeed(12)]);
   const symptomGuides = guides
     .filter((g) => g.tags?.some((t) => COMMON_SYMPTOM_TAGS.includes(t)))
     .slice(0, 4);
@@ -80,6 +81,19 @@ export default async function DiagnosePage() {
 
         <PlantDoctor />
 
+        {/* 진단이 쌓이는 곳 — 내 기록은 마이가든에, 공개된 진단은 모두 여기 모인다 */}
+        {feedItems.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-base font-bold text-plant-primary mb-1">
+              다른 식물집사들의 진단
+            </h2>
+            <p className="text-[12px] text-gray-400 mb-4">
+              공개된 진단만 보여드려요. 내 진단은 마이가든에서 언제든 내릴 수 있어요.
+            </p>
+            <DiagnosisFeed items={feedItems} columnsClassName="grid-cols-2 sm:grid-cols-4" />
+          </section>
+        )}
+
         {symptomGuides.length > 0 && (
           <section className="mt-10">
             <div className="flex items-center justify-between mb-3">
@@ -101,9 +115,6 @@ export default async function DiagnosePage() {
           </section>
         )}
 
-        <section className="mt-8">
-          <AdBanner dataAdSlot="6819394440" variant="horizontal-slim" />
-        </section>
 
         {/* 자주 묻는 증상 — 진단을 못(안) 돌려본 방문자도 답을 얻어가는 자리 */}
         <section className="mt-10">
@@ -131,6 +142,11 @@ export default async function DiagnosePage() {
             증상이 겹쳐 보일 때는 사진으로 진단해 보세요. 잎 색과 흙 상태를 함께 보고
             더 구체적으로 알려드려요.
           </p>
+        </section>
+
+        {/* 증상 FAQ에서 다루는 과습·병충해·분갈이 문맥으로 용품을 매칭 */}
+        <section className="mt-8">
+          <PageFooterPromo haystack={SYMPTOMS.map((s) => `${s.question} ${s.tag}`).join(" ")} />
         </section>
       </main>
     </div>

@@ -17,7 +17,19 @@ export default function MonthlyPlantSection({
   initialMonth: number;
 }) {
   const [month, setMonth] = useState(initialMonth);
+  // 한 달에 17종씩 걸리는 달도 있어 메인이 이 그리드로만 길어졌다. 처음엔 4개만 보여주고
+  // 원하는 사람만 펼치게 한다(달을 바꾸면 다시 접힘 — 새 달을 처음부터 다 펼쳐 보여줄
+  // 이유가 없고, 접힌 상태가 이 섹션의 기본값이라 일관성도 유지된다).
+  const [expanded, setExpanded] = useState(false);
   const filtered = plants.filter((p) => p.bloom_months?.includes(month));
+  const PREVIEW_COUNT = 4;
+  const visible = expanded ? filtered : filtered.slice(0, PREVIEW_COUNT);
+  const hiddenCount = filtered.length - visible.length;
+
+  const selectMonth = (m: number) => {
+    setMonth(m);
+    setExpanded(false);
+  };
 
   return (
     <>
@@ -28,7 +40,7 @@ export default function MonthlyPlantSection({
             <button
               key={m}
               type="button"
-              onClick={() => setMonth(m)}
+              onClick={() => selectMonth(m)}
               aria-pressed={m === month}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                 m === month
@@ -61,7 +73,27 @@ export default function MonthlyPlantSection({
           </p>
         ) : (
           // 메인화면은 이 광고를 그리드 중간이 아니라 하단 가드닝팁 위로 옮겨 배치하므로 끔
-          <PlantGrid plants={filtered} showAd={false} />
+          <>
+            <PlantGrid plants={visible} showAd={false} />
+            {hiddenCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setExpanded(true)}
+                className="mt-4 w-full py-3 rounded-full border border-gray-200 bg-white text-xs font-bold text-plant-primary hover:border-plant-primary transition-colors"
+              >
+                {month}월 개화 식물 {hiddenCount}개 더보기
+              </button>
+            )}
+            {expanded && filtered.length > PREVIEW_COUNT && (
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                className="mt-4 w-full py-3 rounded-full border border-gray-200 bg-white text-xs font-medium text-gray-500 hover:border-plant-primary hover:text-plant-primary transition-colors"
+              >
+                접기
+              </button>
+            )}
+          </>
         )}
       </section>
     </>

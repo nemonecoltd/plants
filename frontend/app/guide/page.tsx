@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import GuideListClient from "@/components/GuideListClient";
 import { getGuides, getGuideTags } from "@/lib/api";
 import { seededShuffle, todaySeed } from "@/lib/shuffle";
+import PageFooterPromo from "@/components/PageFooterPromo";
 
 export const metadata: Metadata = {
   title: "가드닝팁",
@@ -19,6 +20,10 @@ export default async function GuidePage() {
     <div className="min-h-screen bg-[#F4F6F4]">
       <main className="max-w-5xl mx-auto px-6 py-8">
         <GuideListClient guides={guides} tags={tags} />
+
+        <div className="mt-10">
+          <PageFooterPromo />
+        </div>
       </main>
     </div>
   );

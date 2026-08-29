@@ -4,6 +4,7 @@ import PlantGrid from "@/components/PlantGrid";
 import SearchBar from "@/components/SearchBar";
 import { getPlants } from "@/lib/api";
 import type { PlantSummary } from "@/lib/api";
+import PageFooterPromo from "@/components/PageFooterPromo";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -52,6 +53,10 @@ export default async function PlantsPage({ searchParams }: Props) {
         ) : (
           <PlantGrid plants={plants} />
         )}
+
+        <div className="mt-10">
+          <PageFooterPromo haystack={q ?? ""} />
+        </div>
       </main>
     </div>
   );
