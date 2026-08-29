@@ -16,8 +16,9 @@ function matches(guide: GuideSummary, query: string): boolean {
 }
 
 // 글이 쌓일수록 태그가 100개 넘게 늘어나 "주제로 찾기"가 수십 줄을 차지하던 문제 —
-// 자주 쓰인 태그(이미 count DESC로 정렬돼 옴) 위주로 1~2줄만 기본 노출하고 나머지는 접어둔다.
-const VISIBLE_TAG_COUNT = 14;
+// 자주 쓰인 태그(이미 count DESC로 정렬돼 옴) 위주로 모바일 기준 1줄만 기본 노출하고
+// 나머지는 접어둔다(14개는 모바일 좁은 폭에서 4줄까지 차지해서 4개로 축소).
+const VISIBLE_TAG_COUNT = 4;
 
 export default function GuideListClient({ guides, tags }: { guides: GuideSummary[]; tags: GuideTag[] }) {
   const [query, setQuery] = useState("");
