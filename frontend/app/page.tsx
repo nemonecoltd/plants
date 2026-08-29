@@ -56,7 +56,7 @@ export default async function Home() {
         <section className="max-w-5xl mx-auto px-6 pt-8 pb-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold text-plant-primary">🪴 방금 진단받은 식물들</h2>
-            <Link href="/diagnose" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
+            <Link href="/diagnose/all" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
               더보기 →
             </Link>
           </div>

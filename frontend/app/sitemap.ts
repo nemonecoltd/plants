@@ -21,6 +21,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      // 진단 모아보기 1페이지 — 개별 진단(/diagnose/[id])은 noindex라 이 목록이
+      // 진단 콘텐츠 중 실제로 색인되는 유일한 페이지. 뒤 페이지는 콘텐츠가 계속
+      // 바뀌는 데다 얕은 페이지가 늘어나는 걸 피하려 sitemap엔 1페이지만 둔다.
+      url: `${SITE_URL}/diagnose/all`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.6,
+    },
+    {
       url: `${SITE_URL}/plants`,
       lastModified: new Date(),
       changeFrequency: "daily",

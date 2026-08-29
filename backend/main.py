@@ -767,25 +767,34 @@ def get_diagnosis_image(filename: str):
 
 
 @app.get("/api/diagnoses/feed")
-def list_diagnosis_feed(limit: int = 12):
+def list_diagnosis_feed(limit: int = 12, offset: int = 0):
     """다른 사람의 진단까지 함께 보는 공개 피드 — 로그인 없이도 볼 수 있다.
 
     작성자는 표시하지 않는다(익명). 사용자가 마이가든에서 내리면(is_public=false)
     즉시 빠진다. 식별 불가(unknown) 진단은 보여줄 내용이 사실상 없어 제외.
+
+    offset은 /diagnose/all의 페이지네이션용 — 진단이 쌓여도 미리보기(홈/AI진단
+    페이지)는 항상 최신 N개만 보여주고, 전체를 보고 싶으면 그 목록 페이지에서
+    페이지를 넘기게 한다(한 페이지에 다 쏟아붓지 않기 위함). total을 함께 내려줘야
+    프론트가 총 페이지 수를 계산할 수 있다.
     """
     limit = max(1, min(limit, 50))
+    offset = max(0, offset)
     db = SessionLocal()
     try:
+        total = db.execute(
+            text("SELECT count(*) FROM plant_diagnoses WHERE is_public AND status <> 'unknown'")
+        ).scalar_one()
         rows = db.execute(
             text(
                 "SELECT id, image_url, plant_name, matched_plant_slug, status, headline, tags, created_at "
                 "FROM plant_diagnoses "
                 "WHERE is_public AND status <> 'unknown' "
-                "ORDER BY created_at DESC LIMIT :limit"
+                "ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset"
             ),
-            {"limit": limit},
+            {"limit": limit, "offset": offset},
         ).all()
-        return {"items": [_feed_row(r) for r in rows]}
+        return {"items": [_feed_row(r) for r in rows], "total": total}
     finally:
         db.close()
 

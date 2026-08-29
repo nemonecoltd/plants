@@ -145,9 +145,28 @@ export interface DiagnosisFeedItem {
   created_at: string | null;
 }
 
+interface DiagnosisFeedRaw {
+  items: DiagnosisFeedItem[];
+  total: number;
+}
+
+async function fetchDiagnosisFeed(limit: number, offset = 0): Promise<DiagnosisFeedRaw> {
+  const data = await fetchApi<DiagnosisFeedRaw>(`/api/diagnoses/feed?limit=${limit}&offset=${offset}`);
+  return data ?? { items: [], total: 0 };
+}
+
+// 홈/진단 페이지의 미리보기용 — 진단이 아무리 쌓여도 항상 최신 N개만
 export async function getDiagnosisFeed(limit = 12): Promise<DiagnosisFeedItem[]> {
-  const data = await fetchApi<{ items: DiagnosisFeedItem[] }>(`/api/diagnoses/feed?limit=${limit}`);
-  return data?.items ?? [];
+  return (await fetchDiagnosisFeed(limit)).items;
+}
+
+// /diagnose/all의 전체 목록 페이지네이션용 — total을 함께 내려 총 페이지 수를 계산한다
+export async function getDiagnosisFeedPage(
+  page: number,
+  pageSize = 24
+): Promise<{ items: DiagnosisFeedItem[]; total: number }> {
+  const offset = Math.max(0, page - 1) * pageSize;
+  return fetchDiagnosisFeed(pageSize, offset);
 }
 
 // 공개된 진단 한 건 — 비공개거나 없는 id면 null(상세 페이지에서 404 처리)

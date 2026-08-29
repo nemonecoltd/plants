@@ -84,9 +84,12 @@ export default async function DiagnosePage() {
         {/* 진단이 쌓이는 곳 — 내 기록은 마이가든에, 공개된 진단은 모두 여기 모인다 */}
         {feedItems.length > 0 && (
           <section className="mt-10">
-            <h2 className="text-base font-bold text-plant-primary mb-1">
-              다른 식물집사들의 진단
-            </h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base font-bold text-plant-primary">다른 식물집사들의 진단</h2>
+              <Link href="/diagnose/all" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
+                전체보기 →
+              </Link>
+            </div>
             <p className="text-[12px] text-gray-400 mb-4">
               공개된 진단만 보여드려요. 내 진단은 마이가든에서 언제든 내릴 수 있어요.
             </p>
