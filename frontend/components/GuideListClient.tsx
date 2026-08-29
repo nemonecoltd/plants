@@ -15,9 +15,15 @@ function matches(guide: GuideSummary, query: string): boolean {
   return haystack.includes(q);
 }
 
+// 글이 쌓일수록 태그가 100개 넘게 늘어나 "주제로 찾기"가 수십 줄을 차지하던 문제 —
+// 자주 쓰인 태그(이미 count DESC로 정렬돼 옴) 위주로 1~2줄만 기본 노출하고 나머지는 접어둔다.
+const VISIBLE_TAG_COUNT = 14;
+
 export default function GuideListClient({ guides, tags }: { guides: GuideSummary[]; tags: GuideTag[] }) {
   const [query, setQuery] = useState("");
+  const [showAllTags, setShowAllTags] = useState(false);
   const filtered = useMemo(() => guides.filter((g) => matches(g, query)), [guides, query]);
+  const visibleTags = showAllTags ? tags : tags.slice(0, VISIBLE_TAG_COUNT);
 
   const nodes = filtered.flatMap((g, i) => {
     const card = <GuideCard key={g.slug} guide={g} />;
@@ -60,7 +66,7 @@ export default function GuideListClient({ guides, tags }: { guides: GuideSummary
         <div className="mb-6 pb-6 border-b border-gray-200">
           <div className="text-[11px] font-bold text-gray-400 tracking-wider mb-2.5">주제로 찾기</div>
           <div className="flex flex-wrap gap-2">
-            {tags.map((t) => (
+            {visibleTags.map((t) => (
               <Link
                 key={t.tag}
                 href={`/guide/tag/${encodeURIComponent(t.tag)}`}
@@ -69,6 +75,15 @@ export default function GuideListClient({ guides, tags }: { guides: GuideSummary
                 #{t.tag} <span className="opacity-50">{t.count}</span>
               </Link>
             ))}
+            {tags.length > VISIBLE_TAG_COUNT && (
+              <button
+                type="button"
+                onClick={() => setShowAllTags((v) => !v)}
+                className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-500 hover:border-plant-primary hover:text-plant-primary transition-colors"
+              >
+                {showAllTags ? "접기" : `+${tags.length - VISIBLE_TAG_COUNT}개 더`}
+              </button>
+            )}
           </div>
         </div>
       )}
