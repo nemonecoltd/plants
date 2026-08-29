@@ -29,6 +29,9 @@ STATEMENTS = [
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
     """,
+    # 검색 링크 방식이라 API 없이는 상품 이미지가 없음 — 관리자가 대표 이미지를
+    # 수동으로 넣을 수 있게 nullable 컬럼 추가(없으면 텍스트 카드로만 노출).
+    "ALTER TABLE affiliate_products ADD COLUMN IF NOT EXISTS image_url TEXT",
 ]
 
 

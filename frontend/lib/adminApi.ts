@@ -86,6 +86,7 @@ export interface AdminAffiliateProduct {
   id: number;
   label: string;
   coupang_url: string;
+  image_url: string | null;
   match_keywords: string[];
   is_active: boolean;
 }
@@ -93,6 +94,7 @@ export interface AdminAffiliateProduct {
 export interface AffiliateProductPayload {
   label: string;
   coupang_url: string;
+  image_url: string | null;
   match_keywords: string[];
   sort_order: number;
   is_active: boolean;

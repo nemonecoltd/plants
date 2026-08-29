@@ -92,6 +92,7 @@ class AffiliateProduct(Base):
     id = Column(Integer, primary_key=True)
     label = Column(String, nullable=False)
     coupang_url = Column(String, nullable=False)
+    image_url = Column(String)
     match_keywords = Column(ARRAY(String), nullable=False, server_default=text("'{}'"))
     sort_order = Column(Integer, nullable=False, server_default=text("0"))
     is_active = Column(Boolean, nullable=False, server_default=text("true"))
@@ -394,6 +395,7 @@ def _affiliate_product_summary(p: AffiliateProduct) -> dict:
         "id": p.id,
         "label": p.label,
         "coupang_url": p.coupang_url,
+        "image_url": p.image_url,
         "match_keywords": p.match_keywords or [],
     }
 
@@ -416,6 +418,7 @@ def list_affiliate_products():
 class AffiliateProductRequest(BaseModel):
     label: str
     coupang_url: str
+    image_url: Optional[str] = None
     match_keywords: List[str] = []
     sort_order: int = 0
     is_active: bool = True

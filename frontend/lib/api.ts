@@ -101,6 +101,7 @@ export interface AffiliateProduct {
   id: number;
   label: string;
   coupang_url: string;
+  image_url: string | null;
   match_keywords: string[];
 }
 

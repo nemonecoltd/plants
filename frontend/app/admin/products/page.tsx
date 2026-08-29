@@ -22,6 +22,14 @@ export default async function AdminProductsPage() {
       <div className="flex flex-col gap-2 mb-8">
         {products.map((p) => (
           <div key={p.id} className="flex items-center gap-3 bg-white rounded-lg border border-gray-200 p-3">
+            <div className="w-10 h-10 rounded bg-plant-secondary/10 overflow-hidden shrink-0 flex items-center justify-center">
+              {p.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[10px] text-plant-secondary/50">없음</span>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <div className="font-bold text-sm text-plant-primary truncate">{p.label}</div>
               <div className="text-[11px] text-gray-400 truncate">{p.match_keywords.join(", ")}</div>

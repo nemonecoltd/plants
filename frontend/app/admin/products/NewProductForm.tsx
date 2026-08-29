@@ -7,6 +7,7 @@ export default function NewProductForm() {
   const router = useRouter();
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [keywords, setKeywords] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export default function NewProductForm() {
         body: JSON.stringify({
           label,
           coupang_url: url,
+          image_url: imageUrl || null,
           match_keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),
           sort_order: 99,
           is_active: true,
@@ -32,6 +34,7 @@ export default function NewProductForm() {
       if (!res.ok) throw new Error(await res.text());
       setLabel("");
       setUrl("");
+      setImageUrl("");
       setKeywords("");
       router.refresh();
     } catch (e) {
@@ -50,6 +53,15 @@ export default function NewProductForm() {
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">쿠팡 파트너스 링크</label>
         <input className={inputClass} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://link.coupang.com/a/..." />
+      </div>
+      <div>
+        <label className="block text-xs font-bold text-gray-500 mb-1">상품 이미지 URL(선택)</label>
+        <input
+          className={inputClass}
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="https://... (쿠팡 상품 페이지에서 이미지 주소 복사)"
+        />
       </div>
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">매칭 키워드(콤마로 구분)</label>
