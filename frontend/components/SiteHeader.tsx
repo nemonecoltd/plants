@@ -6,6 +6,7 @@ import SearchBar from "@/components/SearchBar";
 
 const NAV_LINKS = [
   { label: "홈", href: "/", enabled: true },
+  { label: "AI 진단", href: "/diagnose", enabled: true },
   { label: "전체 식물", href: "/plants", enabled: true },
   { label: "가드닝팁", href: "/guide", enabled: true },
   { label: "마이가든", href: "/my-garden", enabled: true },
@@ -70,10 +71,15 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      {/* 브랜드 슬로건 띠 — 맛매치 헤더 하단 태그라인과 동일한 패턴 */}
+      {/* 브랜드 슬로건 띠 — 맛매치 헤더 하단 태그라인과 동일한 패턴.
+          AI 진단이 들어오면서 "정보를 알려주는 곳"에서 "같이 키우는 곳"으로 성격이
+          바뀌어 슬로건을 교체하고, 그 아래에 기능 정체성(AI Plant Companion)을 덧붙였다. */}
       <div className="border-t border-gray-100 py-1.5">
-        <p className="text-[10px] font-bold text-gray-400 tracking-[0.15em] text-center">
-          초보집사의 성장을 응원합니다.
+        <p className="text-[10px] font-bold text-plant-primary/70 tracking-[0.15em] text-center">
+          당신과 식물이 함께 자라는 시간
+        </p>
+        <p className="text-[9px] font-medium text-gray-300 tracking-[0.2em] text-center mt-0.5">
+          AI PLANT COMPANION
         </p>
       </div>
     </header>

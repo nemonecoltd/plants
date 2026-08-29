@@ -18,6 +18,9 @@ _frontend_dir = next(
     _APPS_ROOT / "frontend",
 )
 GUIDES_IMAGE_DIR = _frontend_dir / "public" / "images" / "guides"
+# 사용자가 올린 진단용 사진 — 배포(tar 덮어쓰기)는 기존 파일을 지우지 않으므로
+# 여기 쌓인 사용자 사진은 재배포 후에도 남는다.
+DIAGNOSES_IMAGE_DIR = _frontend_dir / "public" / "images" / "diagnoses"
 
 
 def strip_leading_h1(body: str) -> tuple[str | None, str]:

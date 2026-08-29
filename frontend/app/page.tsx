@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
+import DiagnoseHero from "@/components/DiagnoseHero";
 import GuideCard from "@/components/GuideCard";
 import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
@@ -67,7 +68,13 @@ export default async function Home() {
       />
 
       {/* 화면에는 안 보이지만 페이지 정체성을 위해 h1은 유지(SEO/접근성) */}
-      <h1 className="sr-only">식물도감 &amp; 식물집사 케어 가이드 — 저장하고 개화·파종 시기 알림받기</h1>
+      <h1 className="sr-only">
+        AI 식물 진단 &amp; 식물도감 — 사진으로 상태를 확인하고 마이가든에서 함께 키우기
+      </h1>
+
+      {/* 서비스 정체성(사진으로 내 식물을 같이 들여다본다)을 첫 화면에 두기 위해
+          기존 '오늘의 가드닝팁'보다 위에 배치 */}
+      <DiagnoseHero />
 
       {/* ── 가드닝팁 하이라이트(랜덤 3개: 왼쪽 1개 크게 + 오른쪽 2개 가로) ── */}
       {highlightGuides.length > 0 && (

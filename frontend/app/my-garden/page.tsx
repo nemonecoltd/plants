@@ -6,7 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import GuideCard from "@/components/GuideCard";
 import PlantCard from "@/components/PlantCard";
 import { useSaved } from "@/components/SavedProvider";
-import type { GuideSummary, PlantSummary } from "@/lib/api";
+import type { Diagnosis, GuideSummary, PlantSummary } from "@/lib/api";
 
 // 계정 하나로 여러 서비스를 쓰는데 이동 동선이 없어서 하단에 배치(AIM/PACE 마이페이지와 동일).
 // PLANTS는 이 페이지 자신이라 제외, MSM은 아직 통합 인증 대상이 아니지만 서비스 소개 차원에서 포함.
@@ -29,22 +29,58 @@ type Garden = {
   notices: Notice[];
 };
 
+const DIAGNOSIS_STATUS: Record<string, { label: string; badge: string }> = {
+  healthy: { label: "건강해요", badge: "bg-plant-primary text-white" },
+  caution: { label: "살펴볼 점", badge: "bg-amber-500 text-white" },
+  danger: { label: "조치 필요", badge: "bg-red-500 text-white" },
+  unknown: { label: "식별 불가", badge: "bg-gray-400 text-white" },
+};
+
 export default function MyGardenPage() {
   const { user, isLoading: authLoading, signIn, signOut, profileUrl } = useAuth();
   const { isSaved } = useSaved();
   const [garden, setGarden] = useState<Garden | null>(null);
+  const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"plants" | "guides">("plants");
+  const [tab, setTab] = useState<"plants" | "guides" | "diagnoses">("plants");
 
   const load = useCallback(async () => {
     if (!user) return;
+    const uid = encodeURIComponent(user.id);
     try {
-      const res = await fetch(`/api/me/garden?user_id=${encodeURIComponent(user.id)}`);
-      if (res.ok) setGarden(await res.json());
+      // 저장 목록과 진단 기록은 서로 독립이라 한쪽이 실패해도 나머지는 보여준다
+      const [gardenRes, diagRes] = await Promise.allSettled([
+        fetch(`/api/me/garden?user_id=${uid}`),
+        fetch(`/api/me/diagnoses?user_id=${uid}`),
+      ]);
+      if (gardenRes.status === "fulfilled" && gardenRes.value.ok) {
+        setGarden(await gardenRes.value.json());
+      }
+      if (diagRes.status === "fulfilled" && diagRes.value.ok) {
+        const data = await diagRes.value.json();
+        setDiagnoses(data.items ?? []);
+        setRemaining(data.remaining_today ?? null);
+      }
     } finally {
       setLoading(false);
     }
   }, [user]);
+
+  const removeDiagnosis = useCallback(
+    async (id: number) => {
+      if (!user) return;
+      // 낙관적 제거 — 실패하면 되돌린다
+      const before = diagnoses;
+      setDiagnoses((list) => list.filter((d) => d.id !== id));
+      const res = await fetch(
+        `/api/me/diagnoses/${id}?user_id=${encodeURIComponent(user.id)}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) setDiagnoses(before);
+    },
+    [user, diagnoses]
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -166,16 +202,21 @@ export default function MyGardenPage() {
           </section>
         )}
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
           <TabButton active={tab === "plants"} onClick={() => setTab("plants")}>
             저장한 식물 ({visiblePlants.length})
           </TabButton>
           <TabButton active={tab === "guides"} onClick={() => setTab("guides")}>
             저장한 가드닝팁 ({visibleGuides.length})
           </TabButton>
+          <TabButton active={tab === "diagnoses"} onClick={() => setTab("diagnoses")}>
+            AI 진단 기록 ({diagnoses.length})
+          </TabButton>
         </div>
 
-        {tab === "plants" ? (
+        {tab === "diagnoses" ? (
+          <DiagnosisList items={diagnoses} remaining={remaining} onDelete={removeDiagnosis} />
+        ) : tab === "plants" ? (
           visiblePlants.length === 0 ? (
             <EmptyState
               message="아직 저장한 식물이 없어요."
@@ -226,6 +267,121 @@ export default function MyGardenPage() {
           </div>
         </section>
       </main>
+    </div>
+  );
+}
+
+// 진단 기록은 "저장한 목록"과 성격이 달라(내가 만든 기록) 카드 그리드 대신
+// 날짜순 타임라인으로 보여준다 — 같은 식물을 여러 번 찍으면 변화가 읽히도록.
+function DiagnosisList({
+  items,
+  remaining,
+  onDelete,
+}: {
+  items: Diagnosis[];
+  remaining: number | null;
+  onDelete: (id: number) => void;
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="py-8">
+        <p className="text-gray-500 text-sm mb-1">아직 진단 기록이 없어요.</p>
+        <p className="text-gray-400 text-[13px] mb-4">
+          식물 사진을 올리면 상태를 살펴보고 이곳에 기록으로 남겨드려요.
+        </p>
+        <Link
+          href="/diagnose"
+          className="inline-block px-6 py-2.5 rounded-full bg-plant-primary text-white text-xs font-bold no-underline hover:opacity-90"
+        >
+          내 식물 진단하기
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {remaining !== null && (
+        <p className="text-[11px] text-gray-400">
+          {remaining > 0
+            ? `오늘 ${remaining}번 더 진단할 수 있어요`
+            : "오늘의 진단을 모두 사용했어요. 내일 다시 만나요."}
+        </p>
+      )}
+
+      {items.map((d) => {
+        const status = DIAGNOSIS_STATUS[d.status] ?? DIAGNOSIS_STATUS.unknown;
+        return (
+          <article key={d.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="flex gap-4 p-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={d.image_url}
+                alt=""
+                className="w-20 h-20 rounded-lg object-cover shrink-0 bg-plant-secondary/10"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status.badge}`}>
+                    {status.label}
+                  </span>
+                  <span className="text-[13px] font-bold text-plant-primary truncate">
+                    {d.plant_name ?? "이름 미상"}
+                  </span>
+                </div>
+                {d.headline && (
+                  <p className="text-[13px] text-gray-700 leading-snug mb-2">{d.headline}</p>
+                )}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] text-gray-400">
+                    {d.created_at ? new Date(d.created_at).toLocaleDateString("ko-KR") : ""}
+                  </span>
+                  {d.matched_plant_slug && (
+                    <Link
+                      href={`/plants/${d.matched_plant_slug}`}
+                      className="text-[10px] text-plant-primary no-underline hover:underline"
+                    >
+                      도감 보기 →
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onDelete(d.id)}
+                    className="text-[10px] text-gray-300 hover:text-red-500 ml-auto"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {d.body_html && (
+              <details className="border-t border-gray-100">
+                <summary className="px-4 py-2.5 text-[11px] font-medium text-plant-secondary cursor-pointer hover:text-plant-primary list-none">
+                  진단 내용 자세히 보기
+                </summary>
+                <div
+                  className="px-4 pb-4 text-[13px] text-gray-700 leading-[1.8] [&_h2]:text-[12px] [&_h2]:font-bold [&_h2]:text-plant-primary [&_h2]:mt-4 [&_h2]:mb-1.5 [&_p]:mb-2.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2.5 [&_li]:mb-1"
+                  dangerouslySetInnerHTML={{ __html: d.body_html }}
+                />
+                {d.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 px-4 pb-4">
+                    {d.tags.map((t) => (
+                      <Link
+                        key={t}
+                        href={`/guide/tag/${encodeURIComponent(t)}`}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25"
+                      >
+                        #{t}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </details>
+            )}
+          </article>
+        );
+      })}
     </div>
   );
 }

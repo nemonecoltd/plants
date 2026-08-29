@@ -109,3 +109,24 @@ export async function getAffiliateProducts(): Promise<AffiliateProduct[]> {
   const data = await fetchApi<{ items: AffiliateProduct[] }>("/api/affiliate-products");
   return data?.items ?? [];
 }
+
+// AI 진단 — 사진 한 장으로 받은 결과. 마이가든에 기록으로 남고 그 자체가 콘텐츠가 된다.
+export type DiagnosisStatus = "healthy" | "caution" | "danger" | "unknown";
+
+export interface Diagnosis {
+  id: number;
+  image_url: string;
+  plant_name: string | null;
+  scientific_name: string | null;
+  matched_plant_slug: string | null;
+  status: DiagnosisStatus;
+  headline: string | null;
+  body_html: string | null;
+  tags: string[];
+  created_at: string | null;
+}
+
+export interface DiagnosisResponse extends Diagnosis {
+  remaining_today: number;
+  daily_limit: number;
+}

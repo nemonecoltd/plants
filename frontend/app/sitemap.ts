@@ -14,6 +14,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
+      // AI 진단 — 서비스 차별점이자 증상형 검색어의 착지 페이지라 도감과 같은 비중으로 둔다
+      url: `${SITE_URL}/diagnose`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: `${SITE_URL}/plants`,
       lastModified: new Date(),
       changeFrequency: "daily",

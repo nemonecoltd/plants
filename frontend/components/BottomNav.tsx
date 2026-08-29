@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { label: "홈", href: "/", enabled: true, icon: HomeIcon },
   { label: "전체 식물", href: "/plants", enabled: true, icon: LeafIcon },
+  // 진단은 이 서비스의 정체성이라 가운데(엄지가 가장 닿기 쉬운 자리)에 둔다
+  { label: "AI 진단", href: "/diagnose", enabled: true, icon: CameraIcon },
   { label: "가드닝팁", href: "/guide", enabled: true, icon: BookIcon },
   { label: "마이가든", href: "/my-garden", enabled: true, icon: HeartIcon },
 ] as const;
@@ -69,6 +71,15 @@ function LeafIcon() {
     <svg viewBox="0 0 24 24" className="w-5 h-5" style={{ stroke: "currentColor", strokeWidth: 2, fill: "none" }}>
       <path d="M4 20c8 0 16-6 16-16-10 0-16 8-16 16Z" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M4 20c0-5 3-9 8-11" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" style={{ stroke: "currentColor", strokeWidth: 2, fill: "none" }}>
+      <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2a1 1 0 0 0 .84-.46l.92-1.42A1 1 0 0 1 9.3 4.7h5.4a1 1 0 0 1 .84.42l.92 1.42a1 1 0 0 0 .84.46h2.2A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-9Z" strokeLinejoin="round" />
+      <circle cx="12" cy="13" r="3.2" />
     </svg>
   );
 }
