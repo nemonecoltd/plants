@@ -33,7 +33,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     ...guides.map((g) => ({
       url: `${SITE_URL}/guide/${g.slug}`,
-      lastModified: g.published_at ? new Date(g.published_at) : undefined,
+      // 관리자가 발행 후에도 내용을 수정할 수 있게 됐으니(2026-08-29 /admin 추가),
+      // 고정된 published_at 대신 updated_at을 우선해 실제 갱신 시점을 신호로 준다
+      lastModified: g.updated_at ? new Date(g.updated_at) : g.published_at ? new Date(g.published_at) : undefined,
       // 자체 글은 계절 정보를 갱신할 여지가 있어 수집분보다 자주 확인하도록 둠
       changeFrequency: g.source === "original" ? ("monthly" as const) : ("yearly" as const),
       priority: g.source === "original" ? 0.7 : 0.6,

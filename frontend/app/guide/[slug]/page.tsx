@@ -76,6 +76,7 @@ export default async function GuideDetailPage({ params }: Props) {
         description: guide.summary ?? undefined,
         image: guide.thumbnail_url ?? undefined,
         datePublished: guide.published_at ?? undefined,
+        dateModified: guide.updated_at ?? guide.published_at ?? undefined,
         mainEntityOfPage: `${SITE_URL}/guide/${slug}`,
         keywords: guide.tags.length ? guide.tags.join(", ") : undefined,
         author: { "@type": "Organization", name: "NEMONE PLANTS", url: SITE_URL },
