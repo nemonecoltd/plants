@@ -238,12 +238,11 @@ export default async function PlantDetailPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="mt-6">
-          {matchedProducts.length > 0 ? (
-            <ProductRecommendation products={matchedProducts} />
-          ) : (
-            <AdBanner dataAdSlot="6819394440" />
-          )}
+        <div className="mt-6 flex flex-col gap-4">
+          {/* 상품 추천은 텍스트 위주라 그 아래가 허전해 보여서, 매칭 여부와 상관없이
+              광고는 항상 유지하고 상품 추천은 있을 때만 위에 추가로 보여줌 */}
+          {matchedProducts.length > 0 && <ProductRecommendation products={matchedProducts} />}
+          <AdBanner dataAdSlot="6819394440" />
         </div>
       </main>
     </div>
