@@ -61,7 +61,9 @@ export default async function Home() {
             </Link>
           </div>
           {/* 모바일 2개 / PC 3개 */}
-          <DiagnosisFeed items={feedItems} columnsClassName="grid-cols-2 sm:grid-cols-3" />
+          {/* 모바일 2개 / PC 3개 — 3개를 2열 그리드에 넣으면 모바일에서 1개가 다음 줄로
+              넘어가 그 아래 광고를 밀어내므로, 3번째 카드는 sm 이상에서만 보이게 함 */}
+          <DiagnosisFeed items={feedItems} columnsClassName="grid-cols-2 sm:grid-cols-3" mobileVisibleCount={2} />
         </section>
       )}
 

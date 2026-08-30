@@ -13,16 +13,23 @@ const STATUS_BADGE: Record<DiagnosisStatus, { label: string; className: string }
 export default function DiagnosisFeed({
   items,
   columnsClassName = "grid-cols-2 sm:grid-cols-3",
+  mobileVisibleCount,
 }: {
   items: DiagnosisFeedItem[];
   columnsClassName?: string;
+  // 모바일 2열/PC 3열처럼 열 수가 반응형으로 바뀌는 그리드는, 카드 개수가 열 수의
+  // 배수가 아니면 모바일에서 어중간하게 다음 줄로 한 칸이 넘어가 아래 배치(광고 등)를
+  // 밀어낸다. 지정하면 그 개수를 넘는 카드를 모바일에서만 숨겨(sm 이상에서는 그대로
+  // 다 보임) 항상 딱 맞는 줄 수로 떨어지게 한다.
+  mobileVisibleCount?: number;
 }) {
   if (items.length === 0) return null;
 
   return (
     <div className={`grid ${columnsClassName} gap-4`}>
-      {items.map((d) => {
+      {items.map((d, i) => {
         const badge = STATUS_BADGE[d.status] ?? STATUS_BADGE.unknown;
+        const hiddenOnMobile = mobileVisibleCount !== undefined && i >= mobileVisibleCount;
 
         return (
           <Link
@@ -30,7 +37,7 @@ export default function DiagnosisFeed({
             // 카드를 누르면 진단 전문을 읽을 수 있어야 한다 — 도감으로 바로 보내면
             // 정작 궁금한 "이 식물이 왜 이런 상태인지"를 못 본 채 넘어간다
             href={`/diagnose/${d.id}`}
-            className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline"
+            className={`block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-plant-primary hover:shadow-md transition-all no-underline ${hiddenOnMobile ? "hidden sm:block" : ""}`}
           >
             <div className="relative aspect-[4/3] bg-plant-secondary/10">
               {/* 사용자가 올린 사진은 백엔드가 /api/로 서빙해 next/image를 태우지 못한다
