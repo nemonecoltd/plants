@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NEMONE PLANTS</string>
+    <string name="title_activity_main">NEMONE PLANTS</string>
+    <string name="package_name">com.nemoneai.plants</string>
+    <string name="custom_url_scheme">com.nemoneai.plants</string>
+</resources>
