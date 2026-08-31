@@ -25,6 +25,7 @@
 import os
 import re
 import sys
+import time
 import xml.etree.ElementTree as ET
 
 import requests
@@ -86,6 +87,39 @@ def fetch_all_items(operation: str, page_size: int = 1000) -> list[dict]:
             break
         page += 1
     return items
+
+
+def fetch_detail(plant_pilbk_no: str, retries: int = 2, session: requests.Session | None = None) -> dict | None:
+    """plantPilbkInfo 상세조회 — 파라미터명이 응답 필드명(plantPilbkNo)이 아니라
+    'req'+필드명(reqPlantPilbkNo)이라는 걸 몰라서 한동안 계속 빈 응답만 받았다.
+    실제 활용 예제 URL(reqSearchWrd)을 보고서야 이 규칙(req 접두사)을 확인함(2026-08-31).
+
+    900건 연속 호출 중 커넥션 타임아웃으로 중간에 죽은 적이 있고, 그 다음엔 재시도
+    타임아웃(15s)×횟수(3)+백오프가 너무 길어서(최악 약 52초/건) 10분 넘게 돌려도
+    체크포인트(200건)에 못 미치는 일이 있었다(2026-08-31) — timeout을 줄이고
+    retries도 2회로 낮춰 건당 최악 대기시간을 크게 단축. 그래도 실패하면 이 항목만
+    건너뛰고 None 반환(다음 실행 때 description이 비어있으니 자동 재시도됨)."""
+    req = session or requests
+    for attempt in range(retries):
+        try:
+            resp = req.get(
+                f"{BASE_URL}/plantPilbkInfo",
+                params={"serviceKey": API_KEY, "reqPlantPilbkNo": plant_pilbk_no},
+                timeout=(5, 8),
+            )
+            resp.raise_for_status()
+            root = ET.fromstring(resp.content)
+            if root.findtext(".//resultCode") != "00":
+                return None
+            item = root.find(".//item")
+            if item is None:
+                return None
+            return {child.tag: (child.text or "").strip() for child in item}
+        except (requests.exceptions.RequestException, ET.ParseError):
+            if attempt == retries - 1:
+                return None
+            time.sleep(1)
+    return None
 
 
 def build_index(items: list[dict], sci_field: str) -> dict[str, dict]:
