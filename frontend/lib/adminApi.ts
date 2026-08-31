@@ -1,4 +1,4 @@
-import type { GuideSummary } from "@/lib/api";
+import type { GuideSummary, PlantDetail } from "@/lib/api";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 const ADMIN_SECRET = process.env.PLANTS_ADMIN_SECRET;
@@ -115,4 +115,39 @@ export async function adminCreateAffiliateProduct(payload: AffiliateProductPaylo
 
 export async function adminDeleteAffiliateProduct(id: number): Promise<void> {
   await adminFetch<{ ok: boolean }>(`/api/admin/affiliate-products/${id}`, { method: "DELETE" });
+}
+
+export interface AdminPlantSummary {
+  slug: string;
+  name_kr: string;
+  scientific_name: string | null;
+  family: string | null;
+  source: string | null;
+}
+
+// 나무위키 등 참고자료를 관리자가 직접 다시 써서 입력하는 용도(2026-08-31) — 이름/학명으로
+// 검색해서 바로 수정. q가 빈 문자열이면 백엔드가 전체(최대 50건)를 이름순으로 돌려준다.
+export async function adminSearchPlants(q: string): Promise<AdminPlantSummary[]> {
+  const data = await adminFetch<{ items: AdminPlantSummary[] }>(
+    `/api/admin/plants/search?q=${encodeURIComponent(q)}`
+  );
+  return data.items;
+}
+
+export async function adminGetPlant(slug: string): Promise<PlantDetail> {
+  return adminFetch<PlantDetail>(`/api/admin/plants/${slug}`);
+}
+
+export type PlantUpdatePayload = Partial<Omit<PlantDetail, "slug" | "updated_at">>;
+
+export async function adminUpdatePlant(slug: string, payload: PlantUpdatePayload): Promise<PlantDetail> {
+  return adminFetch<PlantDetail>(`/api/admin/plants/${slug}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminDeletePlant(slug: string): Promise<void> {
+  await adminFetch<{ ok: boolean }>(`/api/admin/plants/${slug}`, { method: "DELETE" });
 }

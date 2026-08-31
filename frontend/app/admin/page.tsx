@@ -19,6 +19,12 @@ export default async function AdminGuideListPage() {
         <h1 className="text-lg font-bold text-plant-primary">콘텐츠 관리 ({guides.length})</h1>
         <div className="flex gap-2">
           <Link
+            href="/admin/plants"
+            className="inline-block px-4 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium no-underline hover:border-plant-primary hover:text-plant-primary transition-colors"
+          >
+            🌿 식물도감 관리
+          </Link>
+          <Link
             href="/admin/products"
             className="inline-block px-4 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium no-underline hover:border-plant-primary hover:text-plant-primary transition-colors"
           >

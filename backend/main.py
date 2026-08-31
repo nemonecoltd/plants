@@ -493,6 +493,109 @@ def admin_delete_affiliate_product(product_id: int):
         db.close()
 
 
+# ── 식물도감 관리자 편집 ───────────────────────────────────────────────────────
+# 나무위키 등 비영리 라이선스 자료는 그대로 못 갖다 쓰니, 관리자가 참고만 하고
+# 직접 다시 써서 입력하는 용도(2026-08-31) — 이름/학명으로 검색해 바로 수정.
+
+class PlantUpdateRequest(BaseModel):
+    name_kr: Optional[str] = None
+    name_en: Optional[str] = None
+    scientific_name: Optional[str] = None
+    category: Optional[str] = None
+    tags: Optional[List[str]] = None
+    planting_months: Optional[List[int]] = None
+    bloom_months: Optional[List[int]] = None
+    watering_level: Optional[str] = None
+    sunlight: Optional[str] = None
+    soil_type: Optional[List[str]] = None
+    hardiness_zone: Optional[int] = None
+    min_temp_c: Optional[int] = None
+    difficulty: Optional[str] = None
+    description: Optional[str] = None
+    image_urls: Optional[List[str]] = None
+    image_credit: Optional[str] = None
+    family: Optional[str] = None
+    origin: Optional[str] = None
+    growth_form: Optional[str] = None
+    leaf_color: Optional[List[str]] = None
+    flower_color: Optional[List[str]] = None
+    fruit_color: Optional[List[str]] = None
+    leaf_pattern: Optional[str] = None
+    leaf_style: Optional[str] = None
+    propagation_methods: Optional[List[str]] = None
+    pests: Optional[List[str]] = None
+    toxicity: Optional[str] = None
+
+
+@app.get("/api/admin/plants/search", dependencies=[Depends(verify_admin)])
+def admin_search_plants(q: str = ""):
+    db = SessionLocal()
+    try:
+        query = db.query(Plant)
+        if q.strip():
+            like = f"%{q.strip()}%"
+            query = query.filter(
+                (Plant.name_kr.ilike(like)) | (Plant.scientific_name.ilike(like)) | (Plant.name_en.ilike(like))
+            )
+        plants = query.order_by(Plant.name_kr).limit(50).all()
+        return {
+            "items": [
+                {
+                    "slug": p.slug,
+                    "name_kr": p.name_kr,
+                    "scientific_name": p.scientific_name,
+                    "family": p.family,
+                    "source": p.source,
+                }
+                for p in plants
+            ]
+        }
+    finally:
+        db.close()
+
+
+@app.get("/api/admin/plants/{slug}", dependencies=[Depends(verify_admin)])
+def admin_get_plant(slug: str):
+    db = SessionLocal()
+    try:
+        p = db.query(Plant).filter(Plant.slug == slug).first()
+        if not p:
+            raise HTTPException(status_code=404, detail="식물을 찾을 수 없습니다")
+        return _detail(p)
+    finally:
+        db.close()
+
+
+@app.put("/api/admin/plants/{slug}", dependencies=[Depends(verify_admin)])
+def admin_update_plant(slug: str, req: PlantUpdateRequest):
+    db = SessionLocal()
+    try:
+        p = db.query(Plant).filter(Plant.slug == slug).first()
+        if not p:
+            raise HTTPException(status_code=404, detail="식물을 찾을 수 없습니다")
+        for field, value in req.model_dump(exclude_unset=True).items():
+            setattr(p, field, value)
+        p.updated_at = datetime.now(_KST)
+        db.commit()
+        return _detail(p)
+    finally:
+        db.close()
+
+
+@app.delete("/api/admin/plants/{slug}", dependencies=[Depends(verify_admin)])
+def admin_delete_plant(slug: str):
+    db = SessionLocal()
+    try:
+        p = db.query(Plant).filter(Plant.slug == slug).first()
+        if not p:
+            raise HTTPException(status_code=404, detail="식물을 찾을 수 없습니다")
+        db.delete(p)
+        db.commit()
+        return {"ok": True}
+    finally:
+        db.close()
+
+
 # ── 마이가든 ──────────────────────────────────────────────────────────────────
 # user_id는 Supabase auth.users의 UUID를 클라이언트가 그대로 넘긴다(matmatch/now와 동일 패턴).
 # 저장 목록은 민감정보가 아니고 기존 서비스들도 같은 방식이라 일관성을 위해 맞췄다.
