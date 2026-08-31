@@ -84,6 +84,9 @@ export default async function PlantDetailPage({ params }: Props) {
     plant.watering_level ? WATERING_LABEL[plant.watering_level] ?? plant.watering_level : "",
   ].join(" ");
   const matchedProducts = matchProducts(affiliateProducts, plantHaystack);
+  // 국립수목원 API(상업적 이용금지 라이선스) 데이터가 섞인 항목은 광고·제휴 상품을 빼고
+  // 출처만 표시 — source 필드에 forest_gov가 포함된 경우로 판별(2026-08-31).
+  const hasForestGovData = plant.source?.includes("forest_gov") ?? false;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -230,20 +233,27 @@ export default async function PlantDetailPage({ params }: Props) {
             </p>
           )}
 
-          {plant.source === "nongsaro" && (
+          {plant.source?.includes("nongsaro") && (
             <p className="text-[11px] text-gray-400 text-right mt-3">
               {"<출처 : 농사로(농촌진흥청) 제공>"}
+            </p>
+          )}
+          {hasForestGovData && (
+            <p className="text-[11px] text-gray-400 text-right mt-1">
+              {"<출처 : 국립수목원 국가생물종지식정보시스템>"}
             </p>
           )}
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-4">
-          {/* 상품 추천은 텍스트 위주라 그 아래가 허전해 보여서, 매칭 여부와 상관없이
-              광고는 항상 유지하고 상품 추천은 있을 때만 위에 추가로 보여줌 */}
-          {matchedProducts.length > 0 && <ProductRecommendation products={matchedProducts} />}
-          <AdBanner dataAdSlot="6819394440" />
-        </div>
+        {!hasForestGovData && (
+          <div className="mt-6 flex flex-col gap-4">
+            {/* 상품 추천은 텍스트 위주라 그 아래가 허전해 보여서, 매칭 여부와 상관없이
+                광고는 항상 유지하고 상품 추천은 있을 때만 위에 추가로 보여줌 */}
+            {matchedProducts.length > 0 && <ProductRecommendation products={matchedProducts} />}
+            <AdBanner dataAdSlot="6819394440" />
+          </div>
+        )}
       </main>
     </div>
   );
