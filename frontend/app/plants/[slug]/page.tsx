@@ -119,6 +119,11 @@ export default async function PlantDetailPage({ params }: Props) {
           {image && (
             <div className="relative aspect-[16/9]">
               <Image src={image} alt={plant.name_kr} fill className="object-cover" priority />
+              {plant.image_credit && (
+                <p className="absolute bottom-1 right-2 text-[10px] text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+                  {plant.image_credit}
+                </p>
+              )}
             </div>
           )}
           <div className="p-6">

@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "nongsaro.go.kr" },
       { protocol: "https", hostname: "www.nongsaro.go.kr" },
+      // 국립수목원 API로 늘어난 자생식물 종에는 사진이 없어 Wikimedia Commons에서
+      // 학명으로 검색한 CC 라이선스 사진을 다운로드 없이 핫링크로 사용(2026-08-31).
+      { protocol: "https", hostname: "upload.wikimedia.org" },
     ],
   },
   // 브라우저에서 /api/*를 호출할 때(마이가든 저장 등) — 프로덕션은 nginx가 /api/를

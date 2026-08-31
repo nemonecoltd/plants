@@ -34,6 +34,7 @@ export interface PlantDetail extends PlantSummary {
   pests: string[] | null;
   toxicity: string | null;
   source: string | null;
+  image_credit: string | null;
 }
 
 // 서버 컴포넌트 전용 fetch — msm의 lib/internalApi.ts와 동일하게 캐시를 꺼서

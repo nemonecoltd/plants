@@ -74,6 +74,7 @@ class Plant(Base):
     difficulty = Column(String)           # easy / medium / hard
     description = Column(Text)
     image_urls = Column(ARRAY(String))
+    image_credit = Column(Text)           # Wikimedia 등 핫링크 사진 출처(작가/라이선스/원본페이지)
     family = Column(String)               # 과명(예: 진달래과)
     origin = Column(String)               # 원산지
     growth_form = Column(String)          # 생육형태(직립형/관목형/덩굴성 등)
@@ -161,6 +162,7 @@ def _detail(p: Plant) -> dict:
         "pests": p.pests,
         "toxicity": p.toxicity,
         "source": p.source,
+        "image_credit": p.image_credit,
     }
 
 
