@@ -4,12 +4,14 @@ import Link from "next/link";
 // 서비스 정체성을 첫 화면에서 바로 보여주는 자리. 실제 촬영/업로드는 /diagnose에서
 // 하지만(로그인·업로드 상태를 메인에 끌고 오면 첫 로딩이 무거워짐), 여기서 그 행동을
 // 분명하게 제안한다.
-export default function DiagnoseHero() {
+export default function DiagnoseHero({ attachedTop = false }: { attachedTop?: boolean }) {
   return (
-    <section className="max-w-5xl mx-auto px-6 pt-6">
+    <section className={`max-w-5xl mx-auto px-6 ${attachedTop ? "" : "pt-6"}`}>
       <Link
         href="/diagnose"
-        className="group block relative overflow-hidden rounded-2xl bg-plant-primary no-underline"
+        className={`group block relative overflow-hidden bg-plant-primary no-underline ${
+          attachedTop ? "rounded-b-2xl" : "rounded-2xl"
+        }`}
       >
         {/* 잎맥을 연상시키는 얇은 곡선 — 사진 없이도 식물의 결이 느껴지도록 */}
         <svg
