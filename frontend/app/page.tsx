@@ -51,16 +51,20 @@ export default async function Home() {
         AI 식물 진단 &amp; 식물도감 — 사진으로 상태를 확인하고 마이가든에서 함께 키우기
       </h1>
 
-      {/* ── 매거진 한 줄 배너 — 히어로 바로 위. PACE의 'NEW팝업' 티커 바와 같은 구조
-           (뱃지칩 + 내용을 별도 배경의 띠로 확실히 구분)를 라이트 테마로 옮겨왔다.
-           항목이 1개뿐이라 마퀴(스크롤) 없이 고정 한 줄로 표시(2026-09-01). ── */}
+      {/* 서비스 정체성(사진으로 내 식물을 같이 들여다본다)을 첫 화면에 두기 위해
+          기존 '오늘의 가드닝팁'보다 위에 배치 */}
+      <DiagnoseHero />
+
+      {/* ── 매거진 한 줄 배너 — 히어로 바로 아래 틈 없이 붙임(2026-09-01). PACE의
+           'NEW팝업' 티커처럼 뱃지칩+내용을 배경 띠로 구분한 형태를 라이트 테마로
+           옮겨왔다. 항목이 1개뿐이라 마퀴(스크롤) 없이 고정 한 줄로 표시. ── */}
       {latestMagazine && (
-        <section className="max-w-5xl mx-auto px-6 pt-6">
+        <section className="max-w-5xl mx-auto px-6">
           <Link
             href={`/guide/magazine/${latestMagazine.id}`}
-            className="flex items-stretch bg-plant-primary/5 border border-plant-primary/15 rounded-full overflow-hidden no-underline hover:bg-plant-primary/10 transition-colors"
+            className="flex items-stretch bg-plant-primary/5 border border-t-0 border-plant-primary/15 rounded-b-2xl overflow-hidden no-underline hover:bg-plant-primary/10 transition-colors"
           >
-            <span className="shrink-0 flex items-center gap-1 pl-3.5 pr-3 py-1.5 bg-plant-primary text-white text-[10px] font-black tracking-wide rounded-full">
+            <span className="shrink-0 flex items-center gap-1 pl-4 pr-3 py-1.5 bg-plant-primary text-white text-[10px] font-black tracking-wide">
               📖 매거진
             </span>
             <span className="flex-1 min-w-0 flex items-center gap-2 pl-3 pr-4 py-1.5">
@@ -70,10 +74,6 @@ export default async function Home() {
           </Link>
         </section>
       )}
-
-      {/* 서비스 정체성(사진으로 내 식물을 같이 들여다본다)을 첫 화면에 두기 위해
-          기존 '오늘의 가드닝팁'보다 위에 배치 */}
-      <DiagnoseHero />
 
       {/* ── 다른 사람들의 진단 — 진단하기 바로 아래에서 "이 서비스가 실제로 이렇게 쓰인다"를
              보여주는 자리. 원래 여기 있던 '오늘의 가드닝팁'은 같은 페이지 하단 '가드닝팁'
