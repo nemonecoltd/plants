@@ -63,6 +63,7 @@ class Plant(Base):
     name_en = Column(String)
     scientific_name = Column(String)
     category = Column(String)
+    plant_group = Column(String)          # 꽃/나무/과일/건조/기타 5분류(메뉴 필터용, 2026-09-01)
     tags = Column(ARRAY(String))
     planting_months = Column(ARRAY(Integer))
     bloom_months = Column(ARRAY(Integer))
@@ -129,6 +130,7 @@ def _summary(p: Plant) -> dict:
         "name_kr": p.name_kr,
         "name_en": p.name_en,
         "category": p.category,
+        "plant_group": p.plant_group,
         "tags": p.tags,
         "difficulty": p.difficulty,
         "sunlight": p.sunlight,
@@ -502,6 +504,7 @@ class PlantUpdateRequest(BaseModel):
     name_en: Optional[str] = None
     scientific_name: Optional[str] = None
     category: Optional[str] = None
+    plant_group: Optional[str] = None
     tags: Optional[List[str]] = None
     planting_months: Optional[List[int]] = None
     bloom_months: Optional[List[int]] = None

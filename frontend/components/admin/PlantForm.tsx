@@ -8,6 +8,7 @@ export interface PlantFormValues {
   name_en: string;
   scientific_name: string;
   category: string;
+  plant_group: string;
   tags: string;
   planting_months: string;
   bloom_months: string;
@@ -61,6 +62,7 @@ export default function PlantForm({
         name_en: orNull(values.name_en),
         scientific_name: orNull(values.scientific_name),
         category: orNull(values.category),
+        plant_group: orNull(values.plant_group),
         tags: toList(values.tags),
         planting_months: toIntList(values.planting_months),
         bloom_months: toIntList(values.bloom_months),
@@ -110,6 +112,7 @@ export default function PlantForm({
         <Field label="학명" k="scientific_name" />
         <Field label="과(科)" k="family" />
         <Field label="카테고리" k="category" />
+        <Field label="5분류(꽃/나무/과일/건조/기타)" k="plant_group" />
         <Field label="원산지" k="origin" />
       </div>
 

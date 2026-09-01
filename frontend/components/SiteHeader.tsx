@@ -7,8 +7,8 @@ import SearchBar from "@/components/SearchBar";
 const NAV_LINKS = [
   { label: "홈", href: "/", enabled: true },
   { label: "AI 진단", href: "/diagnose", enabled: true },
-  { label: "전체 식물", href: "/plants", enabled: true },
-  { label: "가드닝팁", href: "/guide", enabled: true },
+  { label: "식물", href: "/plants", enabled: true },
+  { label: "TIPS", href: "/guide", enabled: true },
   { label: "마이가든", href: "/my-garden", enabled: true },
 ] as const;
 

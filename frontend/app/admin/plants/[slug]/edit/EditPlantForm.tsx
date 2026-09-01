@@ -28,6 +28,7 @@ export default function EditPlantForm({ plant }: { plant: PlantDetail }) {
         name_en: plant.name_en ?? "",
         scientific_name: plant.scientific_name ?? "",
         category: plant.category ?? "",
+        plant_group: plant.plant_group ?? "",
         tags: join(plant.tags),
         planting_months: join((plant.planting_months ?? []).map(String)),
         bloom_months: join((plant.bloom_months ?? []).map(String)),

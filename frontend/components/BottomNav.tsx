@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { label: "홈", href: "/", enabled: true, icon: HomeIcon },
-  { label: "전체 식물", href: "/plants", enabled: true, icon: LeafIcon },
+  { label: "식물", href: "/plants", enabled: true, icon: LeafIcon },
   // 진단은 이 서비스의 정체성이라 가운데(엄지가 가장 닿기 쉬운 자리)에 둔다
   { label: "AI 진단", href: "/diagnose", enabled: true, icon: CameraIcon },
-  { label: "가드닝팁", href: "/guide", enabled: true, icon: BookIcon },
+  { label: "TIPS", href: "/guide", enabled: true, icon: BookIcon },
   { label: "마이가든", href: "/my-garden", enabled: true, icon: HeartIcon },
 ] as const;
 

@@ -5,6 +5,7 @@ export interface PlantSummary {
   name_kr: string;
   name_en: string | null;
   category: string | null;
+  plant_group: string | null;
   tags: string[] | null;
   difficulty: string | null;
   sunlight: string | null;
