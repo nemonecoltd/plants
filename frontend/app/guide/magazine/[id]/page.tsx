@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getMagazinePost } from "@/lib/api";
+import AdBanner from "@/components/AdBanner";
+import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
+import { getAffiliateProducts, getMagazinePost } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
 // 원문 소유자는 맛매치(nemoneai.com) — PACE(now_front)와 동일하게 canonical을
@@ -38,6 +40,9 @@ export default async function MagazinePostPage({ params }: Props) {
   const post = await getMagazinePost(Number(id));
   if (!post) notFound();
 
+  const affiliateProducts = await getAffiliateProducts();
+  const matchedProducts = matchProducts(affiliateProducts, `${post.title} ${post.tags ?? ""}`);
+
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       <main className="max-w-2xl mx-auto px-6 py-8">
@@ -64,6 +69,11 @@ export default async function MagazinePostPage({ params }: Props) {
               </a>
             </p>
           </div>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-4">
+          {matchedProducts.length > 0 && <ProductRecommendation products={matchedProducts} />}
+          <AdBanner dataAdSlot="6819394440" />
         </div>
       </main>
     </div>

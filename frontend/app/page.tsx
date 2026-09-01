@@ -5,14 +5,20 @@ import GuideCard from "@/components/GuideCard";
 import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
 import DiagnosisFeed from "@/components/DiagnosisFeed";
-import { getDiagnosisFeed, getGuides, getPlants } from "@/lib/api";
+import { getDiagnosisFeed, getGuides, getMagazine, getPlants } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
 export default async function Home() {
   // PC 3개 / 모바일 2개를 채우되, 비공개 전환 등으로 줄어들 수 있어 조금 여유있게 받는다
-  const [plants, guides, feedAll] = await Promise.all([getPlants(), getGuides(), getDiagnosisFeed(6)]);
+  const [plants, guides, feedAll, magazine] = await Promise.all([
+    getPlants(),
+    getGuides(),
+    getDiagnosisFeed(6),
+    getMagazine(),
+  ]);
+  const latestMagazine = magazine[0] ?? null;
   const feedItems = feedAll.slice(0, 3);
   // 상단 '오늘의 가드닝팁'을 없애면서 관리자의 "메인 고정"(is_hero)이 갈 곳이 없어져,
   // 하단 가드닝팁 섹션이 고정글을 맨 앞에 올리도록 해 기능을 살려둔다.
@@ -44,6 +50,26 @@ export default async function Home() {
       <h1 className="sr-only">
         AI 식물 진단 &amp; 식물도감 — 사진으로 상태를 확인하고 마이가든에서 함께 키우기
       </h1>
+
+      {/* ── 매거진 한 줄 배너 — 히어로 바로 위. PACE의 'NEW팝업' 티커 바와 같은 구조
+           (뱃지칩 + 내용을 별도 배경의 띠로 확실히 구분)를 라이트 테마로 옮겨왔다.
+           항목이 1개뿐이라 마퀴(스크롤) 없이 고정 한 줄로 표시(2026-09-01). ── */}
+      {latestMagazine && (
+        <section className="max-w-5xl mx-auto px-6 pt-6">
+          <Link
+            href={`/guide/magazine/${latestMagazine.id}`}
+            className="flex items-stretch bg-plant-primary/5 border border-plant-primary/15 rounded-full overflow-hidden no-underline hover:bg-plant-primary/10 transition-colors"
+          >
+            <span className="shrink-0 flex items-center gap-1 pl-3.5 pr-3 py-1.5 bg-plant-primary text-white text-[10px] font-black tracking-wide rounded-full">
+              📖 매거진
+            </span>
+            <span className="flex-1 min-w-0 flex items-center gap-2 pl-3 pr-4 py-1.5">
+              <span className="truncate text-xs font-bold text-plant-primary">{latestMagazine.title}</span>
+              <span className="shrink-0 text-plant-secondary text-xs">→</span>
+            </span>
+          </Link>
+        </section>
+      )}
 
       {/* 서비스 정체성(사진으로 내 식물을 같이 들여다본다)을 첫 화면에 두기 위해
           기존 '오늘의 가드닝팁'보다 위에 배치 */}
@@ -106,13 +132,13 @@ export default async function Home() {
         {/* ── 가드닝팁 미리보기 ── */}
         <section className="py-10 border-t border-gray-200 mt-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-plant-primary">가드닝팁</h2>
+            <h2 className="text-lg font-bold text-plant-primary">TIPS</h2>
             <Link href="/guide" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
               전체보기 ({guides.length}) →
             </Link>
           </div>
           {recentGuides.length === 0 ? (
-            <p className="text-gray-500 text-sm">등록된 가드닝팁이 없습니다.</p>
+            <p className="text-gray-500 text-sm">등록된 TIPS가 없습니다.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {recentGuides.map((g) => (
@@ -126,7 +152,7 @@ export default async function Home() {
         <section className="py-12 text-center">
           <h2 className="text-xl font-bold text-plant-primary mb-2">나만의 식물을 기록해보세요</h2>
           <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-            마음에 드는 식물과 가드닝팁을 마이가든에 저장하면,
+            마음에 드는 식물과 TIPS를 마이가든에 저장하면,
             <br className="hidden sm:block" />
             개화·파종 시기가 오면 알려드려요.
           </p>

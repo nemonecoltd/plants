@@ -72,14 +72,10 @@ export default function SiteHeader() {
       </div>
 
       {/* 브랜드 슬로건 띠 — 맛매치 헤더 하단 태그라인과 동일한 패턴.
-          AI 진단이 들어오면서 "정보를 알려주는 곳"에서 "같이 키우는 곳"으로 성격이
-          바뀌어 슬로건을 교체하고, 그 아래에 기능 정체성(AI Plant Companion)을 덧붙였다. */}
+          하단 "AI PLANT COMPANION" 줄은 삭제(2026-09-01, 매거진 한 줄 배너로 대체). */}
       <div className="border-t border-gray-100 py-1.5">
         <p className="text-[10px] font-bold text-plant-primary/70 tracking-[0.15em] text-center">
           당신과 식물이 함께 자라는 시간
-        </p>
-        <p className="text-[9px] font-medium text-gray-300 tracking-[0.2em] text-center mt-0.5">
-          AI PLANT COMPANION
         </p>
       </div>
     </header>
