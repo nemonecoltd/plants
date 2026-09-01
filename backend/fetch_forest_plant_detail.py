@@ -63,7 +63,7 @@ def run(budget: int) -> None:
             """
             SELECT id, scientific_name, origin, name_en, tags FROM plants
             WHERE source LIKE '%forest_gov%'
-              AND NOT (COALESCE(tags, ARRAY[]::varchar[]) @> ARRAY[:done_tag]::varchar[])
+              AND NOT (COALESCE(tags, ARRAY[]::text[]) @> ARRAY[:done_tag]::text[])
             """
         ), {"done_tag": DONE_TAG}).mappings().all()
         print(f"상세정보(v2) 필요한 항목: {len(rows)}건 (이번 실행 예산 {budget}건)")
