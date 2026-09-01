@@ -99,6 +99,29 @@ export async function getGuide(slug: string): Promise<GuideDetail | null> {
   return fetchApi<GuideDetail>(`/api/guides/${slug}`);
 }
 
+// 매거진 — 맛매치 Special(#6, "오늘부터 식물집사")을 그대로 가져와 보여줌
+// (PACE의 now_back/routers/magazine.py와 동일한 패턴, DB 공유·웹훅 없는 단순 프록시)
+export interface MagazineSummary {
+  id: number;
+  title: string;
+  image_url: string | null;
+  category: string | null;
+  created_at: string | null;
+}
+
+export interface MagazinePost extends MagazineSummary {
+  body_text: string | null;
+  tags: string | null;
+}
+
+export async function getMagazine(): Promise<MagazineSummary[]> {
+  return (await fetchApi<MagazineSummary[]>("/api/magazine")) ?? [];
+}
+
+export async function getMagazinePost(id: number): Promise<MagazinePost | null> {
+  return fetchApi<MagazinePost>(`/api/magazine/${id}`);
+}
+
 export interface AffiliateProduct {
   id: number;
   label: string;

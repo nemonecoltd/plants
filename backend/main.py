@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
+import requests
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
@@ -166,6 +167,47 @@ def _detail(p: Plant) -> dict:
         "source": p.source,
         "image_credit": p.image_credit,
     }
+
+
+# ── 매거진(맛매치 Special 연동) ────────────────────────────────────────────────
+# PACE(now_back/routers/magazine.py)와 동일한 패턴 — DB 공유나 웹훅 없이, 맛매치의
+# 공개 API를 그때그때 호출하는 단순 프록시. 맛매치 admin이 이 Special(#6, "오늘부터
+# 식물집사")에 글을 추가하면 별도 작업 없이 여기에도 자동으로 나타난다(2026-09-01).
+MATMATCH_API_BASE = "https://nemoneai.com/api"
+PLANTS_MAGAZINE_SPECIAL_ID = 6
+
+
+@app.get("/api/magazine")
+def get_magazine():
+    try:
+        resp = requests.get(f"{MATMATCH_API_BASE}/specials/{PLANTS_MAGAZINE_SPECIAL_ID}", timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.RequestException:
+        return []
+    posts = sorted(data.get("posts", []), key=lambda p: p.get("created_at") or "", reverse=True)
+    return [
+        {
+            "id": p["id"],
+            "title": p["title"],
+            "image_url": p.get("image_url"),
+            "category": p.get("category"),
+            "created_at": p.get("created_at"),
+        }
+        for p in posts
+    ]
+
+
+@app.get("/api/magazine/{post_id}")
+def get_magazine_post(post_id: int):
+    try:
+        resp = requests.get(f"{MATMATCH_API_BASE}/posts/{post_id}", timeout=5)
+    except requests.RequestException:
+        raise HTTPException(status_code=502, detail="매거진 원문을 가져오지 못했습니다")
+    if resp.status_code == 404:
+        raise HTTPException(status_code=404, detail="글을 찾을 수 없습니다")
+    resp.raise_for_status()
+    return resp.json()
 
 
 @app.get("/api/plants")
