@@ -56,7 +56,12 @@ def generate_guide_draft(keywords: str) -> dict:
     response = _get_client().models.generate_content(
         model="gemini-2.5-pro",
         contents=prompt,
-        config=types.GenerateContentConfig(response_mime_type="application/json"),
+        # gemini-2.5-pro는 flash와 달리 thinking_budget=0을 거부한다("This model only
+        # works in thinking mode") — 허용 최솟값(128)으로 낮춰 비용만 줄인다.
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            thinking_config=types.ThinkingConfig(thinking_budget=128),
+        ),
     )
     data = json.loads(response.text)
 
