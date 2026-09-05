@@ -10,7 +10,7 @@ import type { PlantSummary } from "@/lib/api";
 const PAGE_SIZE = 24;
 
 interface Props {
-  searchParams: Promise<{ q?: string; page?: string; group?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; group?: string; category?: string }>;
 }
 
 function matchesQuery(plant: PlantSummary, q: string): boolean {
@@ -21,24 +21,25 @@ function matchesQuery(plant: PlantSummary, q: string): boolean {
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const { q, page: pageParam, group } = await searchParams;
+  const { q, page: pageParam, group, category } = await searchParams;
   const page = Math.max(1, Math.floor(Number(pageParam)) || 1);
   return {
-    title: q ? `'${q}' 검색결과` : group ? `${group} 식물도감` : "전체 식물도감",
+    title: q ? `'${q}' 검색결과` : category ? `${category} 식물도감` : group ? `${group} 식물도감` : "전체 식물도감",
     description: "실내정원용 식물을 포함해 등록된 모든 식물을 한눈에 찾아보세요.",
     alternates: { canonical: "/plants" },
     // 검색 결과나 2페이지 이상, 분류 필터는 쿼리 조합이 무한하거나 내용이 얕게 반복돼
     // 색인 대상에서 제외(중복 콘텐츠 방지). 링크는 따라가게 둬 상세페이지로는 흘러가게 함
-    robots: q || page > 1 || group ? { index: false, follow: true } : undefined,
+    robots: q || page > 1 || group || category ? { index: false, follow: true } : undefined,
   };
 }
 
 export default async function PlantsPage({ searchParams }: Props) {
-  const { q, page: pageParam, group } = await searchParams;
+  const { q, page: pageParam, group, category } = await searchParams;
   const page = Math.max(1, Math.floor(Number(pageParam)) || 1);
   const allPlants = await getPlants();
   let filtered = q ? allPlants.filter((p) => matchesQuery(p, q)) : allPlants;
   if (group) filtered = filtered.filter((p) => p.plant_group === group);
+  if (category) filtered = filtered.filter((p) => p.category === category);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const plants = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -46,6 +47,7 @@ export default async function PlantsPage({ searchParams }: Props) {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (group) params.set("group", group);
+    if (category) params.set("category", category);
     if (p > 1) params.set("page", String(p));
     const qs = params.toString();
     return qs ? `/plants?${qs}` : "/plants";
@@ -67,7 +69,7 @@ export default async function PlantsPage({ searchParams }: Props) {
         </div>
 
         <h1 className="text-lg font-bold text-plant-primary mb-4">
-          {q ? `'${q}' 검색결과 (${filtered.length})` : group ? `${group} (${filtered.length})` : `전체 식물도감 (${filtered.length})`}
+          {q ? `'${q}' 검색결과 (${filtered.length})` : category ? `${category} (${filtered.length})` : group ? `${group} (${filtered.length})` : `전체 식물도감 (${filtered.length})`}
         </h1>
 
         {filtered.length === 0 ? (

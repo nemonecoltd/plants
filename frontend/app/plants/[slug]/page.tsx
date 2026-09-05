@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
+import PlantImage from "@/components/PlantImage";
 import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
 import SaveButton from "@/components/SaveButton";
 import { getAffiliateProducts, getPlant } from "@/lib/api";
@@ -78,8 +78,14 @@ export default async function PlantDetailPage({ params }: Props) {
 
   const image = getPlantImage(plant);
   const affiliateProducts = await getAffiliateProducts();
+  // 식물명 자체를 키워드로 건 상품(예: "올리브나무")도 매칭되도록 이름·태그도 포함 —
+  // 원래는 범용 케어용품(과습/저광도 등) 매칭만 염두에 두고 카테고리/햇빛/물주기만
+  // 썼는데, 특정 식물 전용 상품을 추가해도 절대 안 잡히는 사각지대였다(2026-09-05).
   const plantHaystack = [
+    plant.name_kr ?? "",
+    plant.name_en ?? "",
     plant.category ?? "",
+    ...(plant.tags ?? []),
     plant.sunlight ? SUNLIGHT_LABEL[plant.sunlight] ?? plant.sunlight : "",
     plant.watering_level ? WATERING_LABEL[plant.watering_level] ?? plant.watering_level : "",
   ].join(" ");
@@ -111,19 +117,20 @@ export default async function PlantDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <main className="max-w-3xl mx-auto px-6 py-8">
-        <Link href="/" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
+        <Link href="/plants" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
           ← 전체 식물 목록
         </Link>
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {image && (
-            <div className="relative aspect-[16/9]">
-              <Image src={image} alt={plant.name_kr} fill className="object-cover" priority />
-              {plant.image_credit && (
-                <p className="absolute bottom-1 right-2 text-[10px] text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
-                  {plant.image_credit}
-                </p>
-              )}
+            <div className="relative aspect-[16/9] bg-plant-secondary/10">
+              <PlantImage src={image} alt={plant.name_kr} className="object-cover" priority>
+                {plant.image_credit && (
+                  <p className="absolute bottom-1 right-2 text-[10px] text-white/70 [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+                    {plant.image_credit}
+                  </p>
+                )}
+              </PlantImage>
             </div>
           )}
           <div className="p-6">
@@ -233,7 +240,7 @@ export default async function PlantDetailPage({ params }: Props) {
           )}
 
           {plant.description && (
-            <p className="text-sm text-gray-700 leading-relaxed border-t border-gray-100 pt-4">
+            <p className="text-sm text-gray-700 leading-relaxed border-t border-gray-100 pt-4 whitespace-pre-line">
               {plant.description}
             </p>
           )}
