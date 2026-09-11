@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import DiagnosisFeed from "@/components/DiagnosisFeed";
+import DiagnosisImage from "@/components/DiagnosisImage";
 import GuideCard from "@/components/GuideCard";
 import PageFooterPromo from "@/components/PageFooterPromo";
 import { getDiagnosis, getDiagnosisFeed, getGuides } from "@/lib/api";
@@ -60,9 +61,9 @@ export default async function DiagnosisDetailPage({ params }: Props) {
         </Link>
 
         <article className={`bg-white rounded-2xl border-2 ${style.ring} overflow-hidden`}>
-          {/* 사용자 사진은 백엔드가 /api/로 서빙해 next/image를 태우지 못한다(GuideThumb 설명 참고) */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={diagnosis.image_url} alt="" className="w-full max-h-80 object-cover" />
+          {/* 사용자 사진은 백엔드가 /api/로 서빙해 next/image를 태우지 못한다(GuideThumb 설명 참고).
+              DiagnosisImage가 로드 실패 시 자리표시자로 대체(2026-09-11 사고 대응). */}
+          <DiagnosisImage src={diagnosis.image_url} alt="" className="w-full max-h-80 object-cover" />
 
           <div className="p-6">
             <div className="flex items-center gap-2 mb-3 flex-wrap">

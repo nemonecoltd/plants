@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import DiagnosisImage from "@/components/DiagnosisImage";
 import GuideCard from "@/components/GuideCard";
 import PlantCard from "@/components/PlantCard";
 import { useSaved } from "@/components/SavedProvider";
@@ -337,8 +338,7 @@ function DiagnosisList({
         return (
           <article key={d.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="flex gap-4 p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <DiagnosisImage
                 src={d.image_url}
                 alt=""
                 className="w-20 h-20 rounded-lg object-cover shrink-0 bg-plant-secondary/10"

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
+import DiagnosisImage from "@/components/DiagnosisImage";
 import type { DiagnosisFeedItem, DiagnosisStatus } from "@/lib/api";
 
 const STATUS_BADGE: Record<DiagnosisStatus, { label: string; className: string }> = {
@@ -49,12 +50,11 @@ export default function DiagnosisFeed({
           >
             <div className="relative aspect-[4/3] bg-plant-secondary/10">
               {/* 사용자가 올린 사진은 백엔드가 /api/로 서빙해 next/image를 태우지 못한다
-                  (GuideThumb의 설명과 같은 이유 — 빌드 시점에 굳은 rewrite 때문) */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+                  (GuideThumb의 설명과 같은 이유 — 빌드 시점에 굳은 rewrite 때문).
+                  DiagnosisImage가 로드 실패 시 자리표시자로 대체(2026-09-11 사고 대응). */}
+              <DiagnosisImage
                 src={d.image_url}
                 alt=""
-                loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <span
