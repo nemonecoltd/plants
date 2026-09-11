@@ -107,14 +107,15 @@ export default async function Home() {
         {/* ── 월별 퀵필터(실제 클릭 가능) + 이번 달 개화 식물 ── */}
         <MonthlyPlantSection plants={plants} totalCount={plants.length} initialMonth={currentMonth} />
 
-        {/* ── 카테고리 태그 (실제 데이터 기반, /plants로 연결) ── */}
+        {/* ── 카테고리 태그 (실제 데이터 기반) — 태그가 전부 /plants로만 가고 category
+             쿼리를 안 넘겨서 필터링이 안 되던 버그 수정(2026-09-04, 사용자 신고) ── */}
         {categories.length > 0 && (
           <section className="pb-6">
             <div className="flex flex-wrap gap-2">
               {categories.map((c) => (
                 <Link
                   key={c}
-                  href="/plants"
+                  href={`/plants?category=${encodeURIComponent(c)}`}
                   className="text-xs px-3 py-1.5 rounded-full bg-plant-secondary/15 text-plant-primary font-medium no-underline hover:bg-plant-secondary/25 transition-colors"
                 >
                   #{c}

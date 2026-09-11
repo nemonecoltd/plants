@@ -2,6 +2,7 @@
 1차 착수 범위: 메인페이지(목록) + 상세페이지만 동작하면 되므로 plants 테이블 하나만 다룬다."""
 import os
 import re
+import threading
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -16,6 +17,8 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import ARRAY, Boolean, Column, DateTime, Integer, String, Text, create_engine, func, text
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
+from indexnow_service import ping_indexnow
 
 from ai_content_service import generate_guide_draft
 from ai_plant_doctor import diagnose_plant
@@ -390,6 +393,7 @@ def admin_publish_guide(req: GuidePublishRequest):
         )
         db.add(guide)
         db.commit()
+        threading.Thread(target=ping_indexnow, args=([f"https://plants.nemoneai.com/guide/{slug}"],), daemon=True).start()
         return {"slug": slug}
     finally:
         db.close()

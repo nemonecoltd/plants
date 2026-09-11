@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  /* body가 flex 컨테이너(layout.tsx)라 footer의 mt-10 여백이 body 배경을 그대로 드러낸다.
+     페이지마다 콘텐츠 wrapper가 전부 bg-[#F4F6F4]를 쓰는데 body만 다른 색이면 그 여백만
+     색이 달라 보여(다크모드 검정 제거 후에도 흰색 vs #F4F6F4 대비로 선처럼 남음, 2026-09-03
+     재신고) 페이지 배경과 맞춰 이음매를 없앤다. */
+  --background: #F4F6F4;
   --foreground: #171717;
   /* NEMONE PLANTS 그린 팔레트 (작업지시서 0번 항목) */
   --plant-primary: #2D5A27;
@@ -17,13 +21,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* create-next-app 기본 다크모드 대응이 남아있었음 — 이 사이트는 다크테마를 실제로
+   구현한 적이 없고 모든 컴포넌트가 흰색/연회색 배경을 하드코딩하는데, body만 시스템
+   다크모드에서 검정(#0a0a0a)으로 바뀌어 섹션 사이 여백(footer의 mt-10 등)에서 body의
+   검정 배경이 두꺼운 선처럼 비쳐 보이는 버그였음(2026-09-03, PC/모바일 공통 신고).
+   진짜 다크테마를 만들기 전까지는 라이트 고정. */
 body {
   background: var(--background);
   color: var(--foreground);

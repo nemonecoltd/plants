@@ -3,12 +3,22 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function SearchBar() {
+// target 기본값 "/search" — 식물+TIPS를 함께 보여주는 통합 검색 결과 페이지(2026-09-11).
+// 전역 헤더(SiteHeader)의 검색창은 이 기본값을 그대로 쓰고, /plants 페이지 안에 있는
+// 검색창만 target="/plants"로 넘겨 기존처럼 식물 목록 안에서의 필터링을 유지한다
+// (이미 분류·페이지네이션이 그 페이지 흐름에 맞춰져 있어 굳이 통합 페이지로 보낼 이유가 없음).
+export default function SearchBar({
+  target = "/search",
+  placeholder = "식물·TIPS 검색",
+}: {
+  target?: string;
+  placeholder?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
 
-  // /plants로 이동한 뒤에도 주소창의 q와 입력값이 어긋나지 않도록 동기화
+  // 페이지 이동 뒤에도 주소창의 q와 입력값이 어긋나지 않도록 동기화
   useEffect(() => {
     setQuery(searchParams.get("q") || "");
   }, [searchParams]);
@@ -16,7 +26,7 @@ export default function SearchBar() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = query.trim();
-    router.push(trimmed ? `/plants?q=${encodeURIComponent(trimmed)}` : "/plants");
+    router.push(trimmed ? `${target}?q=${encodeURIComponent(trimmed)}` : target);
   };
 
   return (
@@ -28,7 +38,7 @@ export default function SearchBar() {
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="식물 이름 검색"
+        placeholder={placeholder}
         className="flex-1 min-w-0 bg-transparent px-4 py-1.5 text-xs text-gray-700 placeholder:text-gray-400 outline-none"
       />
       <button

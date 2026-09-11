@@ -58,7 +58,7 @@ export default async function PlantsPage({ searchParams }: Props) {
       <main className="max-w-5xl mx-auto px-6 py-8">
         <div className="max-w-sm mb-4">
           <Suspense fallback={<div className="h-8 rounded-full bg-white border border-gray-200" />}>
-            <SearchBar />
+            <SearchBar target="/plants" placeholder="식물 이름 검색" />
           </Suspense>
         </div>
 

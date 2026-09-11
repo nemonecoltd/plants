@@ -110,12 +110,54 @@ export default async function PlantDetailPage({ params }: Props) {
     publisher: { "@type": "Organization", name: "NEMONE PLANTS", url: SITE_URL },
   };
 
+  // FAQ(AEO 대응, 2026-09-11, fire-your-seo-agency 스킬 권고) — 필드가 있을 때만 질문을
+  // 만든다. toxicity가 null이라고 "안전하다"고 단정하지 않음(데이터 없음 ≠ 무독성) — 이런
+  // 데이터로 확정 안 되는 문항은 아예 넣지 않는다. 가시 텍스트와 JSON-LD를 같은 배열에서
+  // 만들어 글자까지 어긋나지 않게 한다.
+  const faqItems: { q: string; a: string }[] = [
+    ...(plant.watering_level ? [{
+      q: "물은 얼마나 자주 줘야 하나요?",
+      a: `이 식물은 ${WATERING_LABEL[plant.watering_level] ?? plant.watering_level} 방식으로 물을 주는 것이 좋습니다.`,
+    }] : []),
+    ...(plant.sunlight ? [{
+      q: "어느 정도의 빛이 필요한가요?",
+      a: `이 식물은 ${SUNLIGHT_LABEL[plant.sunlight] ?? plant.sunlight}를 선호합니다.`,
+    }] : []),
+    ...(plant.difficulty ? [{
+      q: "키우기 어려운 식물인가요?",
+      a: `재배 난이도는 '${plant.difficulty}'로 분류됩니다.`,
+    }] : []),
+    ...(plant.min_temp_c != null ? [{
+      q: "겨울철 실외에서도 키울 수 있나요?",
+      a: `최저 견딜 수 있는 온도는 ${plant.min_temp_c}°C입니다. 이보다 기온이 낮아지는 지역·시기에는 실내로 옮기는 것이 좋습니다.`,
+    }] : []),
+    ...(plant.toxicity ? [{
+      q: "반려동물이나 아이가 있는 집에서 키워도 되나요?",
+      a: `${plant.toxicity}이(가) 있어 반려동물이나 아이가 있는 공간에서는 배치에 유의해야 합니다.`,
+    }] : []),
+  ];
+  const faqJsonLd = faqItems.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": { "@type": "Answer", "text": item.a },
+    })),
+  } : null;
+
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <main className="max-w-3xl mx-auto px-6 py-8">
         <Link href="/plants" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
           ← 전체 식물 목록
@@ -257,6 +299,20 @@ export default async function PlantDetailPage({ params }: Props) {
           )}
           </div>
         </div>
+
+        {faqItems.length > 0 && (
+          <div className="mt-6 bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-bold text-plant-primary mb-4">자주 묻는 질문</h2>
+            <div className="space-y-4">
+              {faqItems.map((item, i) => (
+                <div key={i}>
+                  <p className="text-sm font-bold text-gray-800 mb-1">Q. {item.q}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">A. {item.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!hasForestGovData && (
           <div className="mt-6 flex flex-col gap-4">

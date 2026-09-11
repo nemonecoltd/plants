@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [{ url: "/images/plants/hero.jpg", width: 960, height: 640, alt: SITE_NAME }],
+    images: [{ url: "/images/plants/hero.jpg", width: 1024, height: 500, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
@@ -142,6 +142,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4274957638983041"
           crossOrigin="anonymous"
         />
+        {/* 네이버는 신규 글 발견에 sitemap보다 RSS를 우선 폴링(matmatch에서 실측 확인) —
+            자동발견 링크 추가(2026-09-04) */}
+        <link rel="alternate" type="application/rss+xml" title="NEMONE PLANTS RSS" href="https://plants.nemoneai.com/rss.xml" />
       </head>
       <body className="min-h-full flex flex-col pb-14 sm:pb-0">
         <script

@@ -12,9 +12,13 @@ import { getAffiliateProducts } from "@/lib/api";
 export default async function PageFooterPromo({
   haystack,
   fallbackCount = 2,
+  showAd = true,
 }: {
   haystack?: string;
   fallbackCount?: number;
+  // /diagnose처럼 피드 안에 이미 인라인 광고(DiagnosisFeed의 adAfter)를 넣은 페이지는
+  // 하단에 또 배너를 두면 광고가 페이지당 2개로 중복되니 false로 꺼서 뺀다.
+  showAd?: boolean;
 }) {
   const products = await getAffiliateProducts();
   const matched = haystack ? matchProducts(products, haystack) : [];
@@ -23,7 +27,7 @@ export default async function PageFooterPromo({
   return (
     <div className="flex flex-col gap-4">
       {shown.length > 0 && <ProductRecommendation products={shown} />}
-      <AdBanner dataAdSlot="6819394440" />
+      {showAd && <AdBanner dataAdSlot="6819394440" />}
     </div>
   );
 }

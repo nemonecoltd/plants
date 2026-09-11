@@ -37,39 +37,27 @@ function groupOf(guide: GuideSummary): GuideGroup {
   return CATEGORY_TO_GROUP[guide.category ?? ""] ?? "가드닝 기초";
 }
 
-function matches(guide: GuideSummary, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const haystack = [guide.title, guide.summary ?? "", guide.category ?? "", ...guide.tags]
-    .join(" ")
-    .toLowerCase();
-  return haystack.includes(q);
-}
-
 // 글이 쌓일수록 태그가 100개 넘게 늘어나 "주제로 찾기"가 수십 줄을 차지하던 문제 —
 // 자주 쓰인 태그(이미 count DESC로 정렬돼 옴) 위주로 모바일 기준 1줄만 기본 노출하고
-// 나머지는 접어둔다(14개는 모바일 좁은 폭에서 4줄까지 차지해서 4개로 축소).
-const VISIBLE_TAG_COUNT = 4;
+// 나머지는 접어둔다(3개 + "더보기" 버튼이 모바일 폭 한 줄에 들어가는 상한).
+const VISIBLE_TAG_COUNT = 3;
 
 export default function GuideListClient({ guides, tags }: { guides: GuideSummary[]; tags: GuideTag[] }) {
-  const [query, setQuery] = useState("");
   const [group, setGroup] = useState<GuideGroup>("전체");
   const [showAllTags, setShowAllTags] = useState(false);
   const [page, setPage] = useState(1);
   const filtered = useMemo(() => {
-    const byQuery = guides.filter((g) => matches(g, query));
-    return group === "전체" ? byQuery : byQuery.filter((g) => groupOf(g) === group);
-  }, [guides, query, group]);
+    return group === "전체" ? guides : guides.filter((g) => groupOf(g) === group);
+  }, [guides, group]);
   const visibleTags = showAllTags ? tags : tags.slice(0, VISIBLE_TAG_COUNT);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // 이 페이지는 전체 목록을 클라이언트에서 실시간으로 검색하는 구조라(=서버 왕복 없음)
-  // 검색어나 분류가 바뀌면 페이지네이션도 1페이지로 되돌려야 "검색했더니 빈 3페이지가
+  // 분류가 바뀌면 페이지네이션도 1페이지로 되돌려야 "분류 바꿨더니 빈 3페이지가
   // 보이는" 상황을 피할 수 있다
   useEffect(() => {
     setPage(1);
-  }, [query, group]);
+  }, [group]);
 
   const nodes = visible.flatMap((g, i) => {
     const card = <GuideCard key={g.slug} guide={g} />;
@@ -84,12 +72,6 @@ export default function GuideListClient({ guides, tags }: { guides: GuideSummary
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-bold text-plant-primary">
-          TIPS {group !== "매거진" && <span className="text-gray-400 font-normal">({filtered.length})</span>}
-        </h1>
-      </div>
-
       <div className="flex gap-2 overflow-x-auto pb-1 mb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {GUIDE_GROUPS.map((g) => (
           <button
@@ -111,33 +93,21 @@ export default function GuideListClient({ guides, tags }: { guides: GuideSummary
         <MagazineList />
       ) : (
         <>
-      <div className="relative mb-6">
-        <svg
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="궁금한 가드닝 팁을 검색해보세요 (예: 물주기, 장마철)"
-          className="w-full pl-10 pr-4 py-2.5 text-sm rounded-full border border-gray-200 bg-white outline-none focus:border-plant-primary transition-colors placeholder:text-gray-300"
-        />
-      </div>
-
       {tags.length > 0 && (
         <div className="mb-6 pb-6 border-b border-gray-200">
           <div className="text-[11px] font-bold text-gray-400 tracking-wider mb-2.5">주제로 찾기</div>
-          <div className="flex flex-wrap gap-2">
+          <div
+            className={
+              showAllTags
+                ? "flex flex-wrap gap-2"
+                : "flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            }
+          >
             {visibleTags.map((t) => (
               <Link
                 key={t.tag}
                 href={`/guide/tag/${encodeURIComponent(t.tag)}`}
-                className="text-xs px-3 py-1.5 rounded-full bg-plant-secondary/15 text-plant-primary font-medium no-underline hover:bg-plant-secondary/25 transition-colors"
+                className="shrink-0 whitespace-nowrap text-xs px-3 py-1.5 rounded-full bg-plant-secondary/15 text-plant-primary font-medium no-underline hover:bg-plant-secondary/25 transition-colors"
               >
                 #{t.tag} <span className="opacity-50">{t.count}</span>
               </Link>
@@ -146,7 +116,7 @@ export default function GuideListClient({ guides, tags }: { guides: GuideSummary
               <button
                 type="button"
                 onClick={() => setShowAllTags((v) => !v)}
-                className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-500 hover:border-plant-primary hover:text-plant-primary transition-colors"
+                className="shrink-0 whitespace-nowrap text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-500 hover:border-plant-primary hover:text-plant-primary transition-colors"
               >
                 {showAllTags ? "접기" : `+${tags.length - VISIBLE_TAG_COUNT}개 더`}
               </button>
@@ -156,7 +126,7 @@ export default function GuideListClient({ guides, tags }: { guides: GuideSummary
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-gray-500 text-sm">&quot;{query}&quot;에 해당하는 TIPS가 없습니다.</p>
+        <p className="text-gray-500 text-sm">해당하는 TIPS가 없습니다.</p>
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">{nodes}</div>

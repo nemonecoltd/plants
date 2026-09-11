@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import PlantImage from "@/components/PlantImage";
 import SaveButton from "@/components/SaveButton";
 import type { PlantSummary } from "@/lib/api";
 import { getPlantImage } from "@/lib/placeholderImages";
@@ -20,7 +20,7 @@ export default function PlantCard({ plant }: { plant: PlantSummary }) {
       <SaveButton kind="plant" slug={plant.slug} />
       <div className="relative aspect-[4/3] bg-plant-secondary/10">
         {img ? (
-          <Image src={img} alt={plant.name_kr} fill className="object-cover" />
+          <PlantImage src={img} alt={plant.name_kr} className="object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-plant-secondary/40 text-[11px]">
             이미지 준비 중

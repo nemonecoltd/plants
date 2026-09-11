@@ -13,18 +13,15 @@ export default function DiagnoseHero({ attachedTop = false }: { attachedTop?: bo
           attachedTop ? "rounded-b-2xl" : "rounded-2xl"
         }`}
       >
-        {/* 잎맥을 연상시키는 얇은 곡선 — 사진 없이도 식물의 결이 느껴지도록 */}
-        <svg
-          className="absolute inset-0 w-full h-full opacity-[0.18]"
-          viewBox="0 0 400 160"
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-        >
-          <path d="M-20 150 C 80 150, 140 90, 200 20 M-20 150 C 60 130, 110 120, 150 78 M-20 150 C 90 160, 160 140, 210 96"
-            stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-          <path d="M420 10 C 340 10, 280 70, 230 140 M420 10 C 350 30, 300 45, 265 88"
-            stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-        </svg>
+        {/* 배경 사진(2026-09-07 추가) — 텍스트가 사진 위에서도 읽히도록 브랜드 그린 톤 그라디언트를
+            겹친다(순수 검정 대신 plant-primary를 써서 사진이 바뀌어도 브랜드 톤 유지). */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/hero/diagnose-hero.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-plant-primary/95 via-plant-primary/75 to-plant-primary/40" />
 
         <div className="relative px-6 py-7 sm:px-8 sm:py-9 flex items-center gap-5">
           <div className="min-w-0 flex-1">

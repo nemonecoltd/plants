@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AdBanner from "@/components/AdBanner";
 import type { DiagnosisFeedItem, DiagnosisStatus } from "@/lib/api";
 
 const STATUS_BADGE: Record<DiagnosisStatus, { label: string; className: string }> = {
@@ -14,6 +15,8 @@ export default function DiagnosisFeed({
   items,
   columnsClassName = "grid-cols-2 sm:grid-cols-3",
   mobileVisibleCount,
+  adAfter,
+  adSlot,
 }: {
   items: DiagnosisFeedItem[];
   columnsClassName?: string;
@@ -22,16 +25,21 @@ export default function DiagnosisFeed({
   // 밀어낸다. 지정하면 그 개수를 넘는 카드를 모바일에서만 숨겨(sm 이상에서는 그대로
   // 다 보임) 항상 딱 맞는 줄 수로 떨어지게 한다.
   mobileVisibleCount?: number;
+  // 지정하면 이 순번(1-based) 카드 다음에 광고를 끼워 넣는다(GuideListClient의
+  // TIPS 목록과 같은 패턴). 세로로 길어지는 auto 포맷 대신 horizontal-slim으로
+  // 고정해 모바일에서 카드 그리드 높이를 광고가 과하게 밀어내지 않게 한다.
+  adAfter?: number;
+  adSlot?: string;
 }) {
   if (items.length === 0) return null;
 
   return (
     <div className={`grid ${columnsClassName} gap-4`}>
-      {items.map((d, i) => {
+      {items.flatMap((d, i) => {
         const badge = STATUS_BADGE[d.status] ?? STATUS_BADGE.unknown;
         const hiddenOnMobile = mobileVisibleCount !== undefined && i >= mobileVisibleCount;
 
-        return (
+        const card = (
           <Link
             key={d.id}
             // 카드를 누르면 진단 전문을 읽을 수 있어야 한다 — 도감으로 바로 보내면
@@ -65,6 +73,16 @@ export default function DiagnosisFeed({
             </div>
           </Link>
         );
+
+        if (adAfter !== undefined && adSlot && i + 1 === adAfter) {
+          return [
+            card,
+            <div key="ad" className="col-span-full">
+              <AdBanner dataAdSlot={adSlot} variant="horizontal-slim" />
+            </div>,
+          ];
+        }
+        return [card];
       })}
     </div>
   );

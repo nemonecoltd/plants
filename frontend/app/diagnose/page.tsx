@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/diagnose`,
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/images/plants/hero.jpg", width: 960, height: 640, alt: "NEMONE PLANTS AI 식물 진단" }],
+    images: [{ url: "/images/plants/hero.jpg", width: 1024, height: 500, alt: "NEMONE PLANTS AI 식물 진단" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -67,9 +67,6 @@ export default async function DiagnosePage() {
 
       <main className="max-w-3xl mx-auto px-6 py-8">
         <header className="text-center mb-6">
-          <p className="text-[11px] font-bold text-plant-secondary tracking-[0.18em] mb-2">
-            AI PLANT COMPANION
-          </p>
           <h1 className="text-xl font-bold text-plant-primary mb-2">
             우리 집 식물, 지금 괜찮은 걸까요?
           </h1>
@@ -93,7 +90,12 @@ export default async function DiagnosePage() {
             <p className="text-[12px] text-gray-400 mb-4">
               공개된 진단만 보여드려요. 내 진단은 마이가든에서 언제든 내릴 수 있어요.
             </p>
-            <DiagnosisFeed items={feedItems} columnsClassName="grid-cols-2 sm:grid-cols-4" />
+            <DiagnosisFeed
+              items={feedItems}
+              columnsClassName="grid-cols-2 sm:grid-cols-4"
+              adAfter={4}
+              adSlot="6819394440"
+            />
           </section>
         )}
 
@@ -149,7 +151,10 @@ export default async function DiagnosePage() {
 
         {/* 증상 FAQ에서 다루는 과습·병충해·분갈이 문맥으로 용품을 매칭 */}
         <section className="mt-8">
-          <PageFooterPromo haystack={SYMPTOMS.map((s) => `${s.question} ${s.tag}`).join(" ")} />
+          <PageFooterPromo
+            haystack={SYMPTOMS.map((s) => `${s.question} ${s.tag}`).join(" ")}
+            showAd={false}
+          />
         </section>
       </main>
     </div>
