@@ -115,6 +115,10 @@ export default function MyGardenPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#F4F6F4]">
+        {/* 서버 렌더 HTML은 항상 이 로딩 상태라(초기 state가 loading=true) 크롤러는
+            이 분기만 본다 — h1이 로그인 분기에만 있으면 빙 웹마스터도구가 h1 누락으로
+            잡는다(2026-09-11). 디자인 변경 없이 숨김 h1만 추가. */}
+        <h1 className="sr-only">마이가든</h1>
         <main className="max-w-5xl mx-auto px-6 py-16 text-center text-sm text-gray-400">
           불러오는 중…
         </main>
@@ -151,6 +155,7 @@ export default function MyGardenPage() {
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       <main className="max-w-5xl mx-auto px-6 py-8">
+        <h1 className="sr-only">마이가든</h1>
         {/* 프로필 — 이름/사진은 네모네 공용 계정 정보라 수정은 인증 센터로 보냄 */}
         <section className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
           <div className="flex items-center gap-4">

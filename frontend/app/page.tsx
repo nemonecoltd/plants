@@ -8,8 +8,6 @@ import DiagnosisFeed from "@/components/DiagnosisFeed";
 import { getDiagnosisFeed, getGuides, getMagazine, getPlants } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
 
-const SITE_URL = "https://plants.nemoneai.com";
-
 export default async function Home() {
   // PC 3개 / 모바일 2개를 채우되, 비공개 전환 등으로 줄어들 수 있어 조금 여유있게 받는다
   const [plants, guides, feedAll, magazine] = await Promise.all([
@@ -27,24 +25,28 @@ export default async function Home() {
     .slice(0, 3);
   const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    itemListElement: plants.map((p, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      url: `${SITE_URL}/plants/${p.slug}`,
-      name: p.name_kr,
-    })),
-  };
+  // 개화월별 필터에는 실제로 걸리는 식물만 넘긴다 — 1732종 전체를 클라이언트
+  // 컴포넌트 prop으로 넘기면 RSC 페이로드가 부풀어(빙 웹마스터도구 "HTML 125KB 초과"
+  // 경고, 2026-09-11) 개화월이 없는 나머지(약 1,580종)까지 매번 실려간다.
+  // PlantCard/월별 필터가 실제로 쓰는 필드만 남기고 나머지는 비운다 — tags/watering_level/
+  // min_temp_c/updated_at/plant_group은 여기서 쓰이지 않는데도 148종 전체에 실려 페이로드를
+  // 불필요하게 키움
+  const bloomingPlants = plants
+    .filter((p) => p.bloom_months && p.bloom_months.length > 0)
+    .map((p) => ({
+      ...p,
+      plant_group: null,
+      tags: null,
+      watering_level: null,
+      min_temp_c: null,
+      updated_at: null,
+    }));
 
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {/* 전체 식물 1732종의 ItemList는 sitemap.xml이 이미 색인 역할을 하고 있어 중복이고,
+          이 홈페이지 자체가 보여주는 내용도 아니라 페이지 크기만 키웠다(196KB, 2026-09-11
+          빙 지적으로 제거) */}
 
       {/* 화면에는 안 보이지만 페이지 정체성을 위해 h1은 유지(SEO/접근성) */}
       <h1 className="sr-only">
@@ -105,7 +107,7 @@ export default async function Home() {
         <LocalEnvWidget plants={plants} />
 
         {/* ── 월별 퀵필터(실제 클릭 가능) + 이번 달 개화 식물 ── */}
-        <MonthlyPlantSection plants={plants} totalCount={plants.length} initialMonth={currentMonth} />
+        <MonthlyPlantSection plants={bloomingPlants} totalCount={plants.length} initialMonth={currentMonth} />
 
         {/* ── 카테고리 태그 (실제 데이터 기반) — 태그가 전부 /plants로만 가고 category
              쿼리를 안 넘겨서 필터링이 안 되던 버그 수정(2026-09-04, 사용자 신고) ── */}

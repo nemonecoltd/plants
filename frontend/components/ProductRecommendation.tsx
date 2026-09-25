@@ -36,7 +36,7 @@ export default function ProductRecommendation({ products }: { products: Affiliat
             {p.image_url && (
               // 쿠팡 CDN 등 임의 외부 도메인이라 next/image 대신 일반 img 사용
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+              <img src={p.image_url} alt={p.label} className="w-10 h-10 rounded object-cover shrink-0" />
             )}
             <span className="flex-1">{p.label} 보러가기</span>
             <span aria-hidden>→</span>

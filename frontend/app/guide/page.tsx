@@ -18,6 +18,7 @@ export default async function GuidePage() {
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       <main className="max-w-5xl mx-auto px-6 py-8">
+        <h1 className="text-lg font-bold text-plant-primary mb-4">가드닝팁</h1>
         <GuideListClient guides={guides} tags={tags} />
       </main>
     </div>

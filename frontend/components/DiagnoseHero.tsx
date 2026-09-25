@@ -18,7 +18,7 @@ export default function DiagnoseHero({ attachedTop = false }: { attachedTop?: bo
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/hero/diagnose-hero.jpg"
-          alt=""
+          alt="AI 식물 진단 - 사진 한 장으로 우리 집 식물 상태 확인"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-plant-primary/95 via-plant-primary/75 to-plant-primary/40" />

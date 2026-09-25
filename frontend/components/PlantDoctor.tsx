@@ -230,7 +230,7 @@ function ResultView({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={preview ?? result.image_url}
-          alt=""
+          alt={result.plant_name || ""}
           className="w-full max-h-72 object-cover"
         />
       )}

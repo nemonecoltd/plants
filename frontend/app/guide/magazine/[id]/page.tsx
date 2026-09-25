@@ -52,8 +52,12 @@ export default async function MagazinePostPage({ params }: Props) {
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {post.image_url && (
-            <div className="relative aspect-[16/9]">
-              <Image src={post.image_url} alt={post.title} fill className="object-cover" priority />
+            // 매거진 썸네일 원본 비율이 글마다 제각각(2:1 배너부터 세로형 포스터까지)이라
+            // object-cover 고정 크롭이면 콘텐츠가 한쪽에 몰린 이미지는 그쪽이 크게 잘려나감
+            // (2026-09-18 실사고 — 좌측 정렬 템플릿 이미지의 로고·제목이 잘려 보임).
+            // object-contain + 여백 배경으로 전환해 어떤 비율이 와도 항상 전체가 보이게 함.
+            <div className="relative aspect-[16/9] bg-gray-50">
+              <Image src={post.image_url} alt={post.title} fill className="object-contain" priority />
             </div>
           )}
           <div className="p-6">
