@@ -13,7 +13,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import ARRAY, Boolean, Column, DateTime, Integer, String, Text, create_engine, func, text
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
@@ -22,7 +22,8 @@ from indexnow_service import ping_indexnow
 
 from ai_content_service import generate_guide_draft
 from ai_plant_doctor import diagnose_plant
-from content_utils import DIAGNOSES_IMAGE_DIR, GUIDES_IMAGE_DIR, dedupe_slug, strip_leading_h1, to_html
+import diagnosis_storage
+from content_utils import GUIDES_IMAGE_DIR, dedupe_slug, strip_leading_h1, to_html
 from generate_thumbnail import generate_thumbnail
 
 load_dotenv(".env.local")
@@ -913,11 +914,11 @@ def get_diagnosis_image(filename: str):
     if not re.fullmatch(r"[0-9a-f]{32}\.jpg", filename):
         raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다.")
 
-    path = DIAGNOSES_IMAGE_DIR / filename
-    if not path.is_file():
+    data = diagnosis_storage.load(filename)
+    if data is None:
         raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다.")
     # 내용이 바뀌지 않는 파일(uuid 이름)이라 길게 캐시해도 안전
-    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    return Response(content=data, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 @app.get("/api/diagnoses/feed")
@@ -1061,9 +1062,8 @@ async def create_diagnosis(user_id: str = Form(...), file: UploadFile = File(...
             raise HTTPException(status_code=502, detail="진단에 실패했어요. 잠시 후 다시 시도해 주세요.")
 
         # AI 호출이 성공한 뒤에야 파일을 남긴다 — 실패한 시도의 사진이 쌓이지 않도록.
-        DIAGNOSES_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
         filename = f"{uuid.uuid4().hex}.jpg"
-        (DIAGNOSES_IMAGE_DIR / filename).write_bytes(compressed)
+        diagnosis_storage.save(filename, compressed)
         # /images/... 가 아니라 /api/... 로 내보내는 이유는 get_diagnosis_image 주석 참고
         image_url = f"/api/diagnoses/image/{filename}"
 
@@ -1128,10 +1128,7 @@ def delete_diagnosis(diagnosis_id: int, user_id: str):
 
         # 파일 삭제는 실패해도 무시 — DB에서 지워진 이상 화면에는 안 나오고,
         # 고아 파일 하나 때문에 사용자에게 오류를 보여줄 이유가 없다.
-        try:
-            (DIAGNOSES_IMAGE_DIR / Path(row[0]).name).unlink(missing_ok=True)
-        except OSError:
-            pass
+        diagnosis_storage.delete(Path(row[0]).name)
         return {"deleted": True}
     finally:
         db.close()

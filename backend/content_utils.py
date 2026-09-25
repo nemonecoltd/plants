@@ -18,8 +18,9 @@ _frontend_dir = next(
     _APPS_ROOT / "frontend",
 )
 GUIDES_IMAGE_DIR = _frontend_dir / "public" / "images" / "guides"
-# 사용자가 올린 진단용 사진 — 배포(tar 덮어쓰기)는 기존 파일을 지우지 않으므로
-# 여기 쌓인 사용자 사진은 재배포 후에도 남는다.
+# 사용자가 올린 진단용 사진의 "디스크" 위치 — 앱 폴더 안이라 배포 사고로 지워진 적이 있다
+# (2026-09-11, 09-18). 정식 저장소는 비공개 GCS 버킷이며(diagnosis_storage.py) 이 경로는
+# PLANTS_DIAG_BUCKET 미설정 시 폴백 / 업로드 실패 시 임시 보관 용도다.
 DIAGNOSES_IMAGE_DIR = _frontend_dir / "public" / "images" / "diagnoses"
 
 
