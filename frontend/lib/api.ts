@@ -16,6 +16,9 @@ export interface PlantSummary {
   updated_at: string | null;
 }
 
+// 홈 전용 — plant_group/tags/updated_at은 홈에서 아무도 안 읽어서 API가 애초에 안 내려줌
+export type PlantHomeSummary = Omit<PlantSummary, "plant_group" | "tags" | "updated_at">;
+
 export interface PlantDetail extends PlantSummary {
   scientific_name: string | null;
   planting_months: number[] | null;
@@ -58,6 +61,19 @@ export async function getPlants(): Promise<PlantSummary[]> {
   // 도감은 수집기가 하루 몇 번 갱신하는 정도라 10분 캐시로 충분하다.
   const data = await fetchApi<{ items: PlantSummary[] }>("/api/plants", 600);
   return data?.items ?? [];
+}
+
+export interface PlantsHomeData {
+  items: PlantHomeSummary[];
+  categories: string[];
+  total_count: number;
+}
+
+// 홈 전용 — getPlants()의 1/3 크기(필드 축소 + image_urls를 대표 1장만). DB 조회 단계에서부터
+// 홈이 실제 쓰는 컬럼만 SELECT한다(/api/plants/home, 2026-10-01).
+export async function getPlantsHome(): Promise<PlantsHomeData> {
+  const data = await fetchApi<PlantsHomeData>("/api/plants/home", 600);
+  return data ?? { items: [], categories: [], total_count: 0 };
 }
 
 export async function getPlant(slug: string): Promise<PlantDetail | null> {

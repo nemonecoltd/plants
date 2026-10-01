@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PlantImage from "@/components/PlantImage";
 import SaveButton from "@/components/SaveButton";
-import type { PlantSummary } from "@/lib/api";
+import type { PlantHomeSummary } from "@/lib/api";
 import { getPlantImage } from "@/lib/placeholderImages";
 
 const SUNLIGHT_LABEL: Record<string, string> = {
@@ -10,7 +10,7 @@ const SUNLIGHT_LABEL: Record<string, string> = {
   full_shade: "음지",
 };
 
-export default function PlantCard({ plant }: { plant: PlantSummary }) {
+export default function PlantCard({ plant }: { plant: PlantHomeSummary }) {
   const img = getPlantImage(plant);
   return (
     <Link

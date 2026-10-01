@@ -224,6 +224,44 @@ def list_plants():
         db.close()
 
 
+# 홈 전용 — 1,732종 전체를 _summary()의 12개 필드(tags/image_urls 전체 배열 등 포함) 그대로
+# 내려주면 870KB, 홈 응답이 0.3초 이상 걸렸다(2026-10-01 측정). 홈이 실제로 쓰는 건 카테고리
+# 목록, 날씨 추천 스코어링에 쓰는 몇 개 필드, 카드 렌더링용 최소 필드뿐이라 DB 조회 단계에서
+# 이 컬럼들만 SELECT하고 image_urls는 대표 1장만 내려 페이로드를 줄인다.
+# /api/plants/{slug}보다 먼저 등록해야 "home"이 slug로 잡히지 않는다(FastAPI는 등록 순서로 매칭).
+_HOME_COLUMNS = (
+    Plant.slug, Plant.name_kr, Plant.name_en, Plant.category, Plant.difficulty, Plant.sunlight,
+    Plant.watering_level, Plant.min_temp_c, Plant.bloom_months, Plant.image_urls,
+)
+
+
+@app.get("/api/plants/home")
+def list_plants_home():
+    db = SessionLocal()
+    try:
+        rows = db.query(*_HOME_COLUMNS).all()
+        items = [
+            {
+                "slug": r.slug,
+                "name_kr": r.name_kr,
+                "name_en": r.name_en,
+                "category": r.category,
+                "difficulty": r.difficulty,
+                "sunlight": r.sunlight,
+                "watering_level": r.watering_level,
+                "min_temp_c": r.min_temp_c,
+                "bloom_months": r.bloom_months,
+                # 배열째로 내려 getPlantImage(plant.image_urls?.[0])가 그대로 동작하게 함
+                "image_urls": [r.image_urls[0]] if r.image_urls else None,
+            }
+            for r in rows
+        ]
+        categories = sorted({r.category for r in rows if r.category})
+        return {"items": items, "categories": categories, "total_count": len(items)}
+    finally:
+        db.close()
+
+
 @app.get("/api/plants/{slug}")
 def get_plant(slug: str):
     db = SessionLocal()

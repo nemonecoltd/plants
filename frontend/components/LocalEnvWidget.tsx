@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import PlantCard from "@/components/PlantCard";
-import type { PlantSummary } from "@/lib/api";
+import type { PlantHomeSummary } from "@/lib/api";
 
 // 비회원에게도 "이 서비스가 나를 알아본다"는 인상을 주기 위한 위젯이라 정확한 원예학적
 // 근거보다는 체감 상 그럴듯한 추천이면 충분함(토양 pH처럼 정밀한 지표는 다루지 않음).
@@ -136,7 +136,7 @@ function buildMessage(city: string, temp: number, humidity: number): string {
   return `${city}${josa} 지금 딱 무난한 날씨예요. 초보자도 키우기 쉬운 식물을 골라봤어요.`;
 }
 
-function pickRecommendations(plants: PlantSummary[], temp: number, humidity: number): PlantSummary[] {
+function pickRecommendations(plants: PlantHomeSummary[], temp: number, humidity: number): PlantHomeSummary[] {
   const t = tempTier(temp);
   const h = humidityTier(humidity);
 
@@ -155,7 +155,7 @@ function pickRecommendations(plants: PlantSummary[], temp: number, humidity: num
 
   // 같은 카테고리가 몰리지 않도록 다양성 확보
   const seen = new Set<string>();
-  const picked: PlantSummary[] = [];
+  const picked: PlantHomeSummary[] = [];
   for (const { p } of scored) {
     const key = p.category ?? p.slug;
     if (seen.has(key)) continue;
@@ -166,7 +166,7 @@ function pickRecommendations(plants: PlantSummary[], temp: number, humidity: num
   return picked;
 }
 
-export default async function LocalEnvWidget({ plants }: { plants: PlantSummary[] }) {
+export default async function LocalEnvWidget({ plants }: { plants: PlantHomeSummary[] }) {
   const ip = await clientIp();
   if (!ip || ip.startsWith("127.") || ip === "::1") return null;
 

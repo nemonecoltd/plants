@@ -6,17 +6,18 @@ import GuideCard from "@/components/GuideCard";
 import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
 import DiagnosisFeed from "@/components/DiagnosisFeed";
-import { getDiagnosisFeed, getGuides, getMagazine, getPlants } from "@/lib/api";
+import { getDiagnosisFeed, getGuides, getMagazine, getPlantsHome } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
 
 export default async function Home() {
   // PC 3개 / 모바일 2개를 채우되, 비공개 전환 등으로 줄어들 수 있어 조금 여유있게 받는다
-  const [plants, guides, feedAll, magazine] = await Promise.all([
-    getPlants(),
+  const [plantsHome, guides, feedAll, magazine] = await Promise.all([
+    getPlantsHome(),
     getGuides(),
     getDiagnosisFeed(6),
     getMagazine(),
   ]);
+  const { items: plants, categories, total_count: totalPlantCount } = plantsHome;
   const latestMagazine = magazine[0] ?? null;
   const feedItems = feedAll.slice(0, 3);
   // 상단 '오늘의 가드닝팁'을 없애면서 관리자의 "메인 고정"(is_hero)이 갈 곳이 없어져,
@@ -24,24 +25,13 @@ export default async function Home() {
   const recentGuides = [...guides]
     .sort((a, b) => Number(b.is_hero) - Number(a.is_hero))
     .slice(0, 3);
-  const categories = [...new Set(plants.map((p) => p.category).filter(Boolean))] as string[];
   const currentMonth = new Date().getMonth() + 1;
-  // 개화월별 필터에는 실제로 걸리는 식물만 넘긴다 — 1732종 전체를 클라이언트
-  // 컴포넌트 prop으로 넘기면 RSC 페이로드가 부풀어(빙 웹마스터도구 "HTML 125KB 초과"
-  // 경고, 2026-09-11) 개화월이 없는 나머지(약 1,580종)까지 매번 실려간다.
-  // PlantCard/월별 필터가 실제로 쓰는 필드만 남기고 나머지는 비운다 — tags/watering_level/
-  // min_temp_c/updated_at/plant_group은 여기서 쓰이지 않는데도 148종 전체에 실려 페이로드를
-  // 불필요하게 키움
-  const bloomingPlants = plants
-    .filter((p) => p.bloom_months && p.bloom_months.length > 0)
-    .map((p) => ({
-      ...p,
-      plant_group: null,
-      tags: null,
-      watering_level: null,
-      min_temp_c: null,
-      updated_at: null,
-    }));
+  // 개화월별 필터에는 실제로 걸리는 식물만 넘긴다 — 1732종 전체를 클라이언트 컴포넌트
+  // prop으로 넘기면 RSC 페이로드가 부풀어(빙 웹마스터도구 "HTML 125KB 초과" 경고,
+  // 2026-09-11) 개화월이 없는 나머지(약 1,580종)까지 매번 실려간다. tags/plant_group/
+  // updated_at은 /api/plants/home이 애초에 안 내려주므로(2026-10-01) 여기서 따로 비울
+  // 필요가 없다.
+  const bloomingPlants = plants.filter((p) => p.bloom_months && p.bloom_months.length > 0);
 
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
@@ -113,7 +103,7 @@ export default async function Home() {
         </Suspense>
 
         {/* ── 월별 퀵필터(실제 클릭 가능) + 이번 달 개화 식물 ── */}
-        <MonthlyPlantSection plants={bloomingPlants} totalCount={plants.length} initialMonth={currentMonth} />
+        <MonthlyPlantSection plants={bloomingPlants} totalCount={totalPlantCount} initialMonth={currentMonth} />
 
         {/* ── 카테고리 태그 (실제 데이터 기반) — 태그가 전부 /plants로만 가고 category
              쿼리를 안 넘겨서 필터링이 안 되던 버그 수정(2026-09-04, 사용자 신고) ── */}

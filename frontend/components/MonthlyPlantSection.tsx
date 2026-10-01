@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import PlantGrid from "@/components/PlantGrid";
-import type { PlantSummary } from "@/lib/api";
+import type { PlantHomeSummary } from "@/lib/api";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -12,7 +12,7 @@ export default function MonthlyPlantSection({
   totalCount,
   initialMonth,
 }: {
-  plants: PlantSummary[];
+  plants: PlantHomeSummary[];
   totalCount: number;
   initialMonth: number;
 }) {
