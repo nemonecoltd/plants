@@ -40,9 +40,12 @@ export interface PlantDetail extends PlantSummary {
 
 // 서버 컴포넌트 전용 fetch — msm의 lib/internalApi.ts와 동일하게 캐시를 꺼서
 // 로컬 개발 중 데이터가 오래된 채로 굳어 보이는 문제를 방지한다.
-async function fetchApi<T>(path: string): Promise<T | null> {
+async function fetchApi<T>(path: string, revalidateSec?: number): Promise<T | null> {
   try {
-    const res = await fetch(`${BACKEND_URL}${path}`, { cache: "no-store" });
+    const res = await fetch(
+      `${BACKEND_URL}${path}`,
+      revalidateSec ? { next: { revalidate: revalidateSec } } : { cache: "no-store" },
+    );
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {
@@ -51,7 +54,9 @@ async function fetchApi<T>(path: string): Promise<T | null> {
 }
 
 export async function getPlants(): Promise<PlantSummary[]> {
-  const data = await fetchApi<{ items: PlantSummary[] }>("/api/plants");
+  // 1,732종 전체(약 870KB)를 홈 방문마다 새로 받느라 응답이 0.3초 이상 늦어졌다(2026-10-01 측정).
+  // 도감은 수집기가 하루 몇 번 갱신하는 정도라 10분 캐시로 충분하다.
+  const data = await fetchApi<{ items: PlantSummary[] }>("/api/plants", 600);
   return data?.items ?? [];
 }
 

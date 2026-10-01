@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import AdBanner from "@/components/AdBanner";
 import DiagnoseHero from "@/components/DiagnoseHero";
 import GuideCard from "@/components/GuideCard";
@@ -104,7 +105,12 @@ export default async function Home() {
 
       <main className="max-w-5xl mx-auto px-6">
         {/* ── 지역 환경 위젯(IP 기반, 비회원도 노출) — 온도/습도에 맞는 식물 추천 ── */}
-        <LocalEnvWidget plants={plants} />
+        {/* 위치 조회(ipwho.is)+날씨(open-meteo, 서버에서 약 1초)를 기다리느라 첫 방문자의 홈이
+            1~2초씩 늦게 뜨던 문제(2026-10-01 측정) — Suspense로 분리해 나머지를 먼저 보내고
+            위젯은 준비되는 대로 같은 응답 안에서 이어서 채운다. */}
+        <Suspense fallback={null}>
+          <LocalEnvWidget plants={plants} />
+        </Suspense>
 
         {/* ── 월별 퀵필터(실제 클릭 가능) + 이번 달 개화 식물 ── */}
         <MonthlyPlantSection plants={bloomingPlants} totalCount={plants.length} initialMonth={currentMonth} />

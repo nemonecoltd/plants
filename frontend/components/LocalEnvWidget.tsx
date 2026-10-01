@@ -86,8 +86,10 @@ async function geolocateIp(ip: string): Promise<GeoInfo | null> {
 
 async function fetchWeather(lat: number, lon: number): Promise<WeatherInfo | null> {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m`;
-    const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(2500) });
+    // 좌표를 소수 1자리(약 10km)로 묶고 30분 캐시 — 같은 지역 방문자는 open-meteo(서버에서 매번
+    // 약 1초)를 다시 부르지 않는다. 추천은 온도/습도 구간만 쓰므로 이 정도 오차는 결과에 영향 없음.
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(1)}&longitude=${lon.toFixed(1)}&current=temperature_2m,relative_humidity_2m`;
+    const res = await fetch(url, { next: { revalidate: 1800 }, signal: AbortSignal.timeout(2500) });
     if (!res.ok) return null;
     const data = await res.json();
     const temp = data?.current?.temperature_2m;
