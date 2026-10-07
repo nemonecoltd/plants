@@ -5,7 +5,7 @@ import DiagnosisFeed from "@/components/DiagnosisFeed";
 import DiagnosisImage from "@/components/DiagnosisImage";
 import GuideCard from "@/components/GuideCard";
 import PageFooterPromo from "@/components/PageFooterPromo";
-import { getDiagnosis, getDiagnosisFeed, getGuides } from "@/lib/api";
+import { getDiagnosis, getDiagnosisFeed, getGuideTags, getGuides } from "@/lib/api";
 import type { DiagnosisStatus } from "@/lib/api";
 
 interface Props {
@@ -41,8 +41,11 @@ export default async function DiagnosisDetailPage({ params }: Props) {
   const diagnosis = await getDiagnosis(Number(id));
   if (!diagnosis) notFound();
 
-  const [guides, feedItems] = await Promise.all([getGuides(), getDiagnosisFeed(8)]);
+  const [guides, feedItems, guideTags] = await Promise.all([getGuides(), getDiagnosisFeed(8), getGuideTags()]);
   const style = STATUS[diagnosis.status] ?? STATUS.unknown;
+  // AI 진단 태그가 실제 가드닝팁 태그와 어긋나면 /guide/tag/{태그}가 404라서, 존재하는
+  // 태그만 링크로 보여주기 위한 화이트리스트 (2026-10-07, GSC 404 발견 계기)
+  const guideTagSet = new Set(guideTags.map((t) => t.tag));
 
   // 진단에서 나온 태그로 관련 가드닝팁을 붙여 "읽고 끝"이 아니라 해결로 이어지게 한다
   const relatedGuides = guides
@@ -95,15 +98,24 @@ export default async function DiagnosisDetailPage({ params }: Props) {
 
             {diagnosis.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-5">
-                {diagnosis.tags.map((t) => (
-                  <Link
-                    key={t}
-                    href={`/guide/tag/${encodeURIComponent(t)}`}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25 transition-colors"
-                  >
-                    #{t}
-                  </Link>
-                ))}
+                {diagnosis.tags.map((t) =>
+                  guideTagSet.has(t) ? (
+                    <Link
+                      key={t}
+                      href={`/guide/tag/${encodeURIComponent(t)}`}
+                      className="text-[11px] px-2.5 py-1 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25 transition-colors"
+                    >
+                      #{t}
+                    </Link>
+                  ) : (
+                    <span
+                      key={t}
+                      className="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 text-gray-500"
+                    >
+                      #{t}
+                    </span>
+                  )
+                )}
               </div>
             )}
 

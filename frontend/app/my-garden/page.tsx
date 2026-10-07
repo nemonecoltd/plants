@@ -7,6 +7,7 @@ import DiagnosisImage from "@/components/DiagnosisImage";
 import GuideCard from "@/components/GuideCard";
 import PlantCard from "@/components/PlantCard";
 import { useSaved } from "@/components/SavedProvider";
+import { getGuideTagSetClient } from "@/lib/api";
 import type { Diagnosis, GuideSummary, PlantSummary } from "@/lib/api";
 
 // 계정 하나로 여러 서비스를 쓰는데 이동 동선이 없어서 하단에 배치(AIM/PACE 마이페이지와 동일).
@@ -46,6 +47,13 @@ export default function MyGardenPage() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"plants" | "guides" | "diagnoses">("plants");
+  // AI 진단 태그가 실제 가드닝팁 태그와 어긋나면 /guide/tag/{태그}가 404라서, 존재하는
+  // 태그만 링크로 보여주기 위한 화이트리스트 (2026-10-07, GSC 404 발견 계기)
+  const [guideTagSet, setGuideTagSet] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    void getGuideTagSetClient().then(setGuideTagSet);
+  }, []);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -242,6 +250,7 @@ export default function MyGardenPage() {
             remaining={remaining}
             onDelete={removeDiagnosis}
             onToggleVisibility={toggleVisibility}
+            guideTagSet={guideTagSet}
           />
         ) : tab === "plants" ? (
           visiblePlants.length === 0 ? (
@@ -305,11 +314,13 @@ function DiagnosisList({
   remaining,
   onDelete,
   onToggleVisibility,
+  guideTagSet,
 }: {
   items: Diagnosis[];
   remaining: number | null;
   onDelete: (id: number) => void;
   onToggleVisibility: (id: number, next: boolean) => void;
+  guideTagSet: Set<string>;
 }) {
   if (items.length === 0) {
     return (
@@ -417,15 +428,24 @@ function DiagnosisList({
                 />
                 {d.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 px-4 pb-4">
-                    {d.tags.map((t) => (
-                      <Link
-                        key={t}
-                        href={`/guide/tag/${encodeURIComponent(t)}`}
-                        className="text-[10px] px-2 py-0.5 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25"
-                      >
-                        #{t}
-                      </Link>
-                    ))}
+                    {d.tags.map((t) =>
+                      guideTagSet.has(t) ? (
+                        <Link
+                          key={t}
+                          href={`/guide/tag/${encodeURIComponent(t)}`}
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25"
+                        >
+                          #{t}
+                        </Link>
+                      ) : (
+                        <span
+                          key={t}
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"
+                        >
+                          #{t}
+                        </span>
+                      )
+                    )}
                   </div>
                 )}
               </details>

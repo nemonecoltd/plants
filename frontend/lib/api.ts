@@ -107,13 +107,28 @@ export interface GuideDetail extends GuideSummary {
 }
 
 export async function getGuides(): Promise<GuideSummary[]> {
-  const data = await fetchApi<{ items: GuideSummary[] }>("/api/guides");
+  // 가이드는 자주 바뀌지 않아 10분 캐시 (방문마다 DB 조회 방지, 2026-10-05)
+  const data = await fetchApi<{ items: GuideSummary[] }>("/api/guides", 600);
   return data?.items ?? [];
 }
 
 export async function getGuideTags(): Promise<GuideTag[]> {
   const data = await fetchApi<{ items: GuideTag[] }>("/api/guide-tags");
   return data?.items ?? [];
+}
+
+// 클라이언트 컴포넌트 전용 — fetchApi(BACKEND_URL)는 브라우저에서 못 쓰니 상대경로로 호출.
+// AI 진단 태그(#배수 등)가 실제 가드닝팁 태그와 어긋나면 /guide/tag/{태그}가 404라서
+// 그런 태그는 링크 대신 평문으로 보여주기 위한 존재 여부 체크용 (2026-10-07).
+export async function getGuideTagSetClient(): Promise<Set<string>> {
+  try {
+    const res = await fetch("/api/guide-tags");
+    if (!res.ok) return new Set();
+    const data: { items: GuideTag[] } = await res.json();
+    return new Set((data?.items ?? []).map((t) => t.tag));
+  } catch {
+    return new Set();
+  }
 }
 
 export async function getGuide(slug: string): Promise<GuideDetail | null> {
@@ -136,7 +151,7 @@ export interface MagazinePost extends MagazineSummary {
 }
 
 export async function getMagazine(): Promise<MagazineSummary[]> {
-  return (await fetchApi<MagazineSummary[]>("/api/magazine")) ?? [];
+  return (await fetchApi<MagazineSummary[]>("/api/magazine", 600)) ?? [];
 }
 
 export async function getMagazinePost(id: number): Promise<MagazinePost | null> {
@@ -152,7 +167,7 @@ export interface AffiliateProduct {
 }
 
 export async function getAffiliateProducts(): Promise<AffiliateProduct[]> {
-  const data = await fetchApi<{ items: AffiliateProduct[] }>("/api/affiliate-products");
+  const data = await fetchApi<{ items: AffiliateProduct[] }>("/api/affiliate-products", 600);
   return data?.items ?? [];
 }
 

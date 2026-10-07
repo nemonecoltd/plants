@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { compressImage } from "@/lib/compressImage";
+import { getGuideTagSetClient } from "@/lib/api";
 import type { DiagnosisResponse, DiagnosisStatus } from "@/lib/api";
 
 const STATUS_STYLE: Record<DiagnosisStatus, { label: string; badge: string; ring: string }> = {
@@ -31,6 +32,13 @@ export default function PlantDoctor() {
   const [result, setResult] = useState<DiagnosisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
+  // AI 진단 태그가 실제 가드닝팁 태그와 어긋나면 /guide/tag/{태그}가 404라서, 존재하는
+  // 태그만 링크로 보여주기 위한 화이트리스트 (2026-10-07, GSC 404 발견 계기)
+  const [guideTagSet, setGuideTagSet] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    void getGuideTagSetClient().then(setGuideTagSet);
+  }, []);
 
   // 남은 횟수를 미리 보여줘야 "찍었는데 안 된다"는 상황을 만들지 않는다
   useEffect(() => {
@@ -170,7 +178,7 @@ export default function PlantDoctor() {
           <p className="text-xs text-gray-400">10초 정도 걸려요. 잠시만 기다려 주세요.</p>
         </div>
       ) : result ? (
-        <ResultView result={result} preview={preview} onReset={reset} />
+        <ResultView result={result} preview={preview} onReset={reset} guideTagSet={guideTagSet} />
       ) : (
         <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
           <div className="text-3xl mb-3" aria-hidden="true">📷</div>
@@ -217,10 +225,12 @@ function ResultView({
   result,
   preview,
   onReset,
+  guideTagSet,
 }: {
   result: DiagnosisResponse;
   preview: string | null;
   onReset: () => void;
+  guideTagSet: Set<string>;
 }) {
   const style = STATUS_STYLE[result.status] ?? STATUS_STYLE.unknown;
 
@@ -262,15 +272,24 @@ function ResultView({
 
         {result.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-5">
-            {result.tags.map((t) => (
-              <Link
-                key={t}
-                href={`/guide/tag/${encodeURIComponent(t)}`}
-                className="text-[11px] px-2.5 py-1 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25 transition-colors"
-              >
-                #{t}
-              </Link>
-            ))}
+            {result.tags.map((t) =>
+              guideTagSet.has(t) ? (
+                <Link
+                  key={t}
+                  href={`/guide/tag/${encodeURIComponent(t)}`}
+                  className="text-[11px] px-2.5 py-1 rounded-full bg-plant-secondary/15 text-plant-primary no-underline hover:bg-plant-secondary/25 transition-colors"
+                >
+                  #{t}
+                </Link>
+              ) : (
+                <span
+                  key={t}
+                  className="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 text-gray-500"
+                >
+                  #{t}
+                </span>
+              )
+            )}
           </div>
         )}
 
