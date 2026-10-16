@@ -33,7 +33,9 @@ _KST = timezone(timedelta(hours=9))
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://localhost:5432/nemone_plants")
 
-engine = create_engine(DATABASE_URL)
+# 공유 Cloud SQL 인스턴스(max_connections 25, 서비스 5개)라 연결 풀을 작게 유지한다 — 기본 5+10이면 유휴에도 5개를 잡아
+# 산타(유료 서비스)가 연결 슬롯 부족을 만날 수 있다(2026-10-16). 하루 30~40명 규모라 2+2로 충분.
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=1800, pool_size=2, max_overflow=2, pool_timeout=30)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
