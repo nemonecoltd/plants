@@ -13,10 +13,14 @@ const MAGAZINE_URL = (id: number) => `${SITE_URL}/guide/magazine/${id}`;
 // 원문(맛매치) 주소 — PLANTS 소속이 아닌 기사(맛매치 Special #6 밖)는 종전처럼 맛매치가 정본.
 const MATMATCH_POST_URL = (id: number) => `https://nemoneai.com/posts/${id}`;
 
-// PLANTS 소속 기사(Special #6)만 이 페이지가 정본. 조회 실패 시에도 맛매치 정본으로 폴백(중복 색인 방지).
+// 2026-10-24부터 **새로 발행하는** PLANTS 소속 기사(맛매치 Special #6)만 이 페이지가 정본.
+// 그 전 글과 그 밖의 맛매치 기사는 종전처럼 맛매치가 정본·noindex(과거 글 색인 이동 리스크 회피).
+// 조회 실패 시에도 맛매치 정본으로 폴백(중복 색인 방지). 맛매치(serviceHome.ts)·PACE와 같은 기준일 — 바꿀 땐 세 곳을 함께.
+const OWNED_SINCE = process.env.SERVICE_OWNED_SINCE || "2026-10-24";
+
 async function isOwned(id: number): Promise<boolean> {
   const list = await getMagazine();
-  return list.some((m) => m.id === id);
+  return list.some((m) => m.id === id && (m.created_at ?? "").slice(0, 10) >= OWNED_SINCE);
 }
 
 interface Props {

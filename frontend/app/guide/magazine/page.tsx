@@ -5,14 +5,26 @@ import { getMagazine } from "@/lib/api";
 
 // 2026-10-24: PLANTS 소속 기사(맛매치 Special #6)의 색인·정본이 PLANTS로 이동 — 크롤러가 개별 기사를 발견하도록
 // 서버에서 목록을 그려 둔 허브 페이지(가드닝팁 목록·사이트맵에서 링크).
-export const metadata: Metadata = {
-  title: "식물 매거진",
-  description: "초보 식집사를 위한 반려식물 이야기. 식물 고르기부터 키우기까지 NEMONE PLANTS 매거진.",
-  alternates: { canonical: "/guide/magazine" },
-};
+const PER_PAGE = 20;
 
-export default async function MagazineIndexPage() {
-  const posts = await getMagazine();
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ page?: string }> }): Promise<Metadata> {
+  const { page: pageParam } = await searchParams;
+  // 범위를 벗어난 ?page=N은 마지막 페이지로 보여 주므로 정본도 그쪽으로(임의 번호로 중복 페이지가 생기지 않게)
+  const total = Math.max(1, Math.ceil((await getMagazine()).length / PER_PAGE));
+  const page = Math.min(Math.max(1, parseInt(pageParam ?? "1", 10) || 1), total);
+  return {
+    title: page > 1 ? `식물 매거진 (${page}페이지)` : "식물 매거진",
+    description: "초보 식집사를 위한 반려식물 이야기. 식물 고르기부터 키우기까지 NEMONE PLANTS 매거진.",
+    alternates: { canonical: page > 1 ? `/guide/magazine?page=${page}` : "/guide/magazine" },
+  };
+}
+
+export default async function MagazineIndexPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const all = await getMagazine();
+  const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
+  const page = Math.min(Math.max(1, parseInt(pageParam ?? "1", 10) || 1), totalPages);
+  const posts = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       <main className="max-w-5xl mx-auto px-6 py-8">
@@ -28,6 +40,13 @@ export default async function MagazineIndexPage() {
               <MagazineCard key={p.id} post={p} />
             ))}
           </div>
+        )}
+        {totalPages > 1 && (
+          <nav className="flex items-center justify-center gap-4 pt-6 text-sm font-bold" aria-label="매거진 페이지">
+            {page > 1 ? <Link href={page === 2 ? "/guide/magazine" : `/guide/magazine?page=${page - 1}`} rel="prev" className="text-plant-secondary no-underline">← 이전</Link> : <span className="text-gray-300">← 이전</span>}
+            <span className="text-gray-500">{page} / {totalPages}</span>
+            {page < totalPages ? <Link href={`/guide/magazine?page=${page + 1}`} rel="next" className="text-plant-secondary no-underline">다음 →</Link> : <span className="text-gray-300">다음 →</span>}
+          </nav>
         )}
       </main>
     </div>

@@ -8,6 +8,8 @@ import type { MagazineSummary } from "@/lib/api";
 // /api/magazine 호출(맛매치 프록시라 매번 최신 상태를 그대로 보여줌).
 export default function MagazineList() {
   const [posts, setPosts] = useState<MagazineSummary[] | null>(null);
+  // 글이 늘어도 목록이 끝없이 길어지지 않게 20개씩 "더 보기"(2026-10-24 — 예전엔 Special 20개 상한으로 막았음)
+  const [visible, setVisible] = useState(20);
 
   useEffect(() => {
     fetch("/api/magazine")
@@ -26,9 +28,17 @@ export default function MagazineList() {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      {posts.map((p) => (
+      {posts.slice(0, visible).map((p) => (
         <MagazineCard key={p.id} post={p} />
       ))}
+      {posts.length > visible && (
+        <button
+          onClick={() => setVisible((v) => v + 20)}
+          className="col-span-full py-3 rounded-lg border border-gray-200 bg-white text-sm font-bold text-plant-secondary hover:border-plant-primary"
+        >
+          더 보기 ({visible}/{posts.length})
+        </button>
+      )}
     </div>
   );
 }

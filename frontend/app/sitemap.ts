@@ -48,7 +48,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
-    ...magazine.map((m) => ({
+    // 기준일(2026-10-24) 이후 발행한 글만 PLANTS가 정본 — 그 전 글은 맛매치 정본이라 싣지 않는다
+    ...magazine.filter((m) => (m.created_at ?? "").slice(0, 10) >= (process.env.SERVICE_OWNED_SINCE || "2026-10-24")).map((m) => ({
       url: `${SITE_URL}/guide/magazine/${m.id}`,
       lastModified: m.created_at ? new Date(m.created_at) : undefined,
       changeFrequency: "monthly" as const,
