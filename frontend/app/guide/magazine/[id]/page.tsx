@@ -4,12 +4,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
 import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
-import { getAffiliateProducts, getMagazinePost } from "@/lib/api";
+import { getAffiliateProducts, getMagazine, getMagazinePost } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
-// 원문 소유자는 맛매치(nemoneai.com) — PACE(now_front)와 동일하게 canonical을
-// 원문 쪽으로 걸어 중복 콘텐츠로 잡히지 않게 한다. 검색 노출도 원문 쪽에 맡김.
+// 2026-10-24: 색인·정본을 PLANTS 쪽으로 옮김 — PLANTS 소속 기사(맛매치 Special #6)는 여기가 주인이고,
+// 맛매치 /posts/N이 정본을 이 URL로 가리킨다(트래픽을 서비스로 보내기 위해).
+const MAGAZINE_URL = (id: number) => `${SITE_URL}/guide/magazine/${id}`;
+// 원문(맛매치) 주소 — PLANTS 소속이 아닌 기사(맛매치 Special #6 밖)는 종전처럼 맛매치가 정본.
 const MATMATCH_POST_URL = (id: number) => `https://nemoneai.com/posts/${id}`;
+
+// PLANTS 소속 기사(Special #6)만 이 페이지가 정본. 조회 실패 시에도 맛매치 정본으로 폴백(중복 색인 방지).
+async function isOwned(id: number): Promise<boolean> {
+  const list = await getMagazine();
+  return list.some((m) => m.id === id);
+}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -19,14 +27,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const post = await getMagazinePost(Number(id));
   if (!post) return { title: "매거진" };
+  const owned = await isOwned(post.id);
+  const canonical = owned ? MAGAZINE_URL(post.id) : MATMATCH_POST_URL(post.id);
 
   return {
     title: post.title,
-    alternates: { canonical: MATMATCH_POST_URL(post.id) },
-    robots: { index: false, follow: true },
+    description: post.body_text ? post.body_text.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim().slice(0, 150) : undefined,
+    alternates: { canonical },
+    ...(owned ? {} : { robots: { index: false, follow: true } }),
     openGraph: {
       title: post.title,
-      url: MATMATCH_POST_URL(post.id),
+      url: canonical,
       type: "article",
       locale: "ko_KR",
       siteName: "NEMONE PLANTS",
@@ -40,14 +51,26 @@ export default async function MagazinePostPage({ params }: Props) {
   const post = await getMagazinePost(Number(id));
   if (!post) notFound();
 
+  const owned = await isOwned(post.id);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    image: post.image_url ? [post.image_url] : undefined,
+    datePublished: post.created_at ?? undefined,
+    mainEntityOfPage: { "@type": "WebPage", "@id": MAGAZINE_URL(post.id) },
+    author: { "@type": "Organization", name: "NEMONE" },
+    publisher: { "@type": "Organization", name: "NEMONE PLANTS" },
+  };
   const affiliateProducts = await getAffiliateProducts();
   const matchedProducts = matchProducts(affiliateProducts, `${post.title} ${post.tags ?? ""}`);
 
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
+      {owned && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
       <main className="max-w-2xl mx-auto px-6 py-8">
-        <Link href="/guide" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
-          ← TIPS 목록
+        <Link href="/guide/magazine" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
+          ← 매거진 목록
         </Link>
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -68,8 +91,8 @@ export default async function MagazinePostPage({ params }: Props) {
               dangerouslySetInnerHTML={{ __html: post.body_text ?? "" }}
             />
             <p className="text-[11px] text-gray-400 text-right mt-6 pt-4 border-t border-gray-100">
-              <a href={MATMATCH_POST_URL(post.id)} target="_blank" rel="noopener noreferrer" className="text-plant-secondary">
-                원문: 네모네AIM
+              <a href="https://nemoneai.com" target="_blank" rel="noopener noreferrer" className="text-plant-secondary">
+                네모네AIM에서 더 많은 이야기
               </a>
             </p>
           </div>

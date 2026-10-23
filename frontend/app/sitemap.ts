@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { getGuideTags, getGuides, getPlants } from "@/lib/api";
+import { getGuideTags, getGuides, getMagazine, getPlants } from "@/lib/api";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [plants, guides, tags] = await Promise.all([getPlants(), getGuides(), getGuideTags()]);
+  const [plants, guides, tags, magazine] = await Promise.all([getPlants(), getGuides(), getGuideTags(), getMagazine()]);
 
   return [
     {
@@ -41,6 +41,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      // 매거진(맛매치 Special #6 기사) — 2026-10-24부터 색인·정본이 PLANTS 쪽
+      url: `${SITE_URL}/guide/magazine`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    ...magazine.map((m) => ({
+      url: `${SITE_URL}/guide/magazine/${m.id}`,
+      lastModified: m.created_at ? new Date(m.created_at) : undefined,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
     ...plants.map((p) => ({
       url: `${SITE_URL}/plants/${p.slug}`,
       lastModified: p.updated_at ? new Date(p.updated_at) : undefined,

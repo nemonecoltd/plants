@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import GuideListClient from "@/components/GuideListClient";
 import { getGuides, getGuideTags } from "@/lib/api";
 import { seededShuffle, todaySeed } from "@/lib/shuffle";
@@ -18,7 +19,12 @@ export default async function GuidePage() {
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       <main className="max-w-5xl mx-auto px-6 py-8">
-        <h1 className="text-lg font-bold text-plant-primary mb-4">가드닝팁</h1>
+        <div className="flex items-baseline justify-between mb-4">
+          <h1 className="text-lg font-bold text-plant-primary">가드닝팁</h1>
+          <Link href="/guide/magazine" className="text-xs text-plant-secondary no-underline hover:text-plant-primary">
+            식물 매거진 →
+          </Link>
+        </div>
         <GuideListClient guides={guides} tags={tags} />
       </main>
     </div>
