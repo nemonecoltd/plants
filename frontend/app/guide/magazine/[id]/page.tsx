@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
+import DiagnoseCta from "@/components/DiagnoseCta";
 import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
 import { getAffiliateProducts, getMagazine, getMagazinePost } from "@/lib/api";
 
@@ -101,6 +102,8 @@ export default async function MagazinePostPage({ params }: Props) {
             </p>
           </div>
         </div>
+
+        <DiagnoseCta />
 
         <div className="mt-6 flex flex-col gap-4">
           {matchedProducts.length > 0 && <ProductRecommendation products={matchedProducts} />}
