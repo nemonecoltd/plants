@@ -67,9 +67,7 @@ export default async function MagazinePostPage({ params }: Props) {
     publisher: { "@type": "Organization", name: "NEMONE PLANTS" },
   };
   const affiliateProducts = await getAffiliateProducts();
-  // 매거진은 모든 글 하단에 쿠팡 관련 용품이 같은 모양으로 나오도록, 매칭이 없으면 상위 상품을 보여 준다.
-  const matched = matchProducts(affiliateProducts, `${post.title} ${post.tags ?? ""}`);
-  const matchedProducts = matched.length > 0 ? matched : affiliateProducts.slice(0, 2);
+  const matchedProducts = matchProducts(affiliateProducts, `${post.title} ${post.tags ?? ""}`);
 
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
