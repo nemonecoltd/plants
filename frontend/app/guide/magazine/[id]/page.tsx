@@ -106,7 +106,7 @@ export default async function MagazinePostPage({ params }: Props) {
 
         <div className="mt-6 flex flex-col gap-4">
           {matchedProducts.length > 0 && <ProductRecommendation products={matchedProducts} />}
-          <AdBanner dataAdSlot="6819394440" variant="horizontal-slim" />
+          <AdBanner dataAdSlot="6819394440" />
         </div>
       </main>
     </div>
