@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
-import DiagnoseCta from "@/components/DiagnoseCta";
 import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
 import { getAffiliateProducts, getMagazine, getMagazinePost } from "@/lib/api";
 
@@ -68,7 +67,9 @@ export default async function MagazinePostPage({ params }: Props) {
     publisher: { "@type": "Organization", name: "NEMONE PLANTS" },
   };
   const affiliateProducts = await getAffiliateProducts();
-  const matchedProducts = matchProducts(affiliateProducts, `${post.title} ${post.tags ?? ""}`);
+  // 매거진은 모든 글 하단에 쿠팡 관련 용품이 같은 모양으로 나오도록, 매칭이 없으면 상위 상품을 보여 준다.
+  const matched = matchProducts(affiliateProducts, `${post.title} ${post.tags ?? ""}`);
+  const matchedProducts = matched.length > 0 ? matched : affiliateProducts.slice(0, 2);
 
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
@@ -103,11 +104,9 @@ export default async function MagazinePostPage({ params }: Props) {
           </div>
         </div>
 
-        <DiagnoseCta />
-
         <div className="mt-6 flex flex-col gap-4">
           {matchedProducts.length > 0 && <ProductRecommendation products={matchedProducts} />}
-          <AdBanner dataAdSlot="6819394440" />
+          <AdBanner dataAdSlot="6819394440" variant="horizontal-slim" />
         </div>
       </main>
     </div>
