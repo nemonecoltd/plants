@@ -19,6 +19,7 @@ from sqlalchemy import ARRAY, Boolean, Column, DateTime, Integer, String, Text, 
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from indexnow_service import ping_indexnow
+import guide_ranking
 
 from ai_content_service import generate_guide_draft
 from ai_plant_doctor import diagnose_plant
@@ -307,6 +308,36 @@ def list_guides():
     try:
         guides = db.query(Guide).order_by(Guide.published_at.desc().nullslast()).all()
         return {"items": [_guide_summary(g) for g in guides]}
+    finally:
+        db.close()
+
+
+def _guide_published_map() -> dict:
+    db = SessionLocal()
+    try:
+        return {g.slug: (g.published_at.isoformat() if g.published_at else "")
+                for g in db.query(Guide.slug, Guide.published_at).all()}
+    finally:
+        db.close()
+
+
+@app.get("/api/guides/top")
+def top_guides(limit: int = 4):
+    """인기 TIPS — 최근 30일 조회 순위(메인 하단 'TIPS 랭킹'). 라우트 순서상 /api/guides/{slug}보다 위에 있어야 한다.
+    순위 계산은 하루 한 번 백그라운드에서 한다(로그가 커서). 집계가 limit보다 적으면 최신 글로 채운다."""
+    limit = max(1, min(limit, 12))
+    if guide_ranking.TOP.stale():
+        guide_ranking.TOP.refresh_async(_guide_published_map)
+    ranked = guide_ranking.TOP.get()
+    db = SessionLocal()
+    try:
+        by_slug = {g.slug: g for g in db.query(Guide).filter(Guide.slug.in_(ranked[: limit * 2] or ["_"])).all()} if ranked else {}
+        picked = [by_slug[s] for s in ranked if s in by_slug][:limit]
+        if len(picked) < limit:
+            have = {g.slug for g in picked}
+            more = db.query(Guide).order_by(Guide.published_at.desc().nullslast()).limit(limit * 3).all()
+            picked += [g for g in more if g.slug not in have][: limit - len(picked)]
+        return {"items": [_guide_summary(g) for g in picked], "ranked": len(ranked) >= limit}
     finally:
         db.close()
 
@@ -1172,6 +1203,12 @@ def delete_diagnosis(diagnosis_id: int, user_id: str):
         return {"deleted": True}
     finally:
         db.close()
+
+
+@app.on_event("startup")
+def _warm_top_guides():
+    # 서버가 뜨면 바로 인기 순위를 한 번 계산해 둔다(첫 요청이 최신 글 대체 목록을 받아 10분 캐시되는 것을 줄인다)
+    guide_ranking.TOP.refresh_async(_guide_published_map)
 
 
 if __name__ == "__main__":

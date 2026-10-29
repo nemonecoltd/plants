@@ -6,25 +6,24 @@ import GuideCard from "@/components/GuideCard";
 import LocalEnvWidget from "@/components/LocalEnvWidget";
 import MonthlyPlantSection from "@/components/MonthlyPlantSection";
 import DiagnosisFeed from "@/components/DiagnosisFeed";
-import { getDiagnosisFeed, getGuides, getMagazine, getPlantsHome } from "@/lib/api";
+import { getDiagnosisFeed, getGuides, getMagazine, getPlantsHome, getTopGuides } from "@/lib/api";
 import type { GuideSummary } from "@/lib/api";
 
 export default async function Home() {
   // PC 3개 / 모바일 2개를 채우되, 비공개 전환 등으로 줄어들 수 있어 조금 여유있게 받는다
-  const [plantsHome, guides, feedAll, magazine] = await Promise.all([
+  const [plantsHome, guides, feedAll, magazine, topGuides] = await Promise.all([
     getPlantsHome(),
     getGuides(),
     getDiagnosisFeed(6),
     getMagazine(),
+    getTopGuides(4),
   ]);
   const { items: plants, categories, total_count: totalPlantCount } = plantsHome;
   const latestMagazine = magazine[0] ?? null;
   const feedItems = feedAll.slice(0, 3);
-  // 상단 '오늘의 가드닝팁'을 없애면서 관리자의 "메인 고정"(is_hero)이 갈 곳이 없어져,
-  // 하단 가드닝팁 섹션이 고정글을 맨 앞에 올리도록 해 기능을 살려둔다.
-  const recentGuides = [...guides]
-    .sort((a, b) => Number(b.is_hero) - Number(a.is_hero))
-    .slice(0, 3);
+  // 하단 'TIPS'는 최근 30일 조회 순위 4개 — 인기 TIPS (2026-10-29, 운영툴 "메인 고정"은 더 이상 쓰지 않는다).
+  // 순위 조회가 실패하면 최신 글 4개로 대체한다.
+  const rankedGuides = topGuides.length > 0 ? topGuides : guides.slice(0, 4);
   const currentMonth = new Date().getMonth() + 1;
   // 개화월별 필터에는 실제로 걸리는 식물만 넘긴다 — 1732종 전체를 클라이언트 컴포넌트
   // prop으로 넘기면 RSC 페이로드가 부풀어(빙 웹마스터도구 "HTML 125KB 초과" 경고,
@@ -132,17 +131,17 @@ export default async function Home() {
         {/* ── 가드닝팁 미리보기 ── */}
         <section className="py-10 border-t border-gray-200 mt-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-plant-primary">TIPS</h2>
+            <h2 className="text-lg font-bold text-plant-primary">인기 TIPS</h2>
             <Link href="/guide" className="text-xs text-plant-secondary hover:text-plant-primary no-underline">
               전체보기 ({guides.length}) →
             </Link>
           </div>
-          {recentGuides.length === 0 ? (
+          {rankedGuides.length === 0 ? (
             <p className="text-gray-500 text-sm">등록된 TIPS가 없습니다.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {recentGuides.map((g) => (
-                <GuideCard key={g.slug} guide={g} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              {rankedGuides.map((g, i) => (
+                <GuideCard key={g.slug} guide={g} rank={i + 1} />
               ))}
             </div>
           )}

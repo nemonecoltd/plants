@@ -112,6 +112,12 @@ export async function getGuides(): Promise<GuideSummary[]> {
   return data?.items ?? [];
 }
 
+// 메인 하단 '인기 TIPS' — 최근 30일 조회 순위(서버가 하루 한 번 계산). 실패하면 빈 배열 → 호출부가 최신 글로 대체한다.
+export async function getTopGuides(limit = 4): Promise<GuideSummary[]> {
+  const data = await fetchApi<{ items: GuideSummary[] }>(`/api/guides/top?limit=${limit}`, 600);
+  return data?.items ?? [];
+}
+
 export async function getGuideTags(): Promise<GuideTag[]> {
   const data = await fetchApi<{ items: GuideTag[] }>("/api/guide-tags");
   return data?.items ?? [];
