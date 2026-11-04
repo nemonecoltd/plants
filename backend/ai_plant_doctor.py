@@ -87,7 +87,10 @@ def diagnose_plant(image_bytes: bytes, mime_type: str = "image/jpeg") -> dict:
             types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
             _SYSTEM_PROMPT,
         ],
-        config=types.GenerateContentConfig(response_mime_type="application/json"),
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            thinking_config=types.ThinkingConfig(thinking_budget=0),   # 생각 끔(2026-11-04) — 2.5 종료·3.5 자동 전환 때 기본값(생각 켬)이 적용돼 비용·속도가 달라지는 것 방지
+        ),
     )
     data = json.loads(response.text)
 
