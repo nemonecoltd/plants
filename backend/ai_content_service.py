@@ -54,13 +54,11 @@ body_markdown은 반드시 "# 제목"으로 시작해야 한다."""
 def generate_guide_draft(keywords: str) -> dict:
     prompt = f"{_SYSTEM_PROMPT}\n\n---\n관리자가 입력한 키워드/요청사항:\n{keywords}"
     response = _get_client().models.generate_content(
-        model="gemini-2.5-pro",
+        model="gemini-2.5-flash",   # 2026-11-04: pro → flash (flash는 thinking_budget=0을 허용 — pro는 최솟값 128이 필요했다)
         contents=prompt,
-        # gemini-2.5-pro는 flash와 달리 thinking_budget=0을 거부한다("This model only
-        # works in thinking mode") — 허용 최솟값(128)으로 낮춰 비용만 줄인다.
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
-            thinking_config=types.ThinkingConfig(thinking_budget=128),
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
         ),
     )
     data = json.loads(response.text)
