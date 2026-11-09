@@ -75,9 +75,6 @@ export default async function MagazinePostPage({ params }: Props) {
       {owned && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
       <div className="xl:grid xl:grid-cols-[minmax(0,42rem)_18rem] xl:gap-8 xl:justify-center">
       <main className="max-w-2xl mx-auto px-6 py-8">
-        <Link href="/guide/magazine" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
-          ← 매거진 목록
-        </Link>
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {post.image_url && (

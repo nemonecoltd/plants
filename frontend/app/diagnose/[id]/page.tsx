@@ -58,12 +58,6 @@ export default async function DiagnosisDetailPage({ params }: Props) {
     <div className="min-h-screen bg-[#F4F6F4]">
       <div className="xl:grid xl:grid-cols-[minmax(0,48rem)_18rem] xl:gap-8 xl:justify-center">
       <main className="max-w-3xl mx-auto px-6 py-8">
-        <Link
-          href="/diagnose"
-          className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4"
-        >
-          ← AI 진단
-        </Link>
 
         <article className={`bg-white rounded-2xl border-2 ${style.ring} overflow-hidden`}>
           {/* 사용자 사진은 백엔드가 /api/로 서빙해 next/image를 태우지 못한다(GuideThumb 설명 참고).
