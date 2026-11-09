@@ -6,6 +6,7 @@ import ProductRecommendation, { matchProducts } from "@/components/ProductRecomm
 import SaveButton from "@/components/SaveButton";
 import { getAffiliateProducts, getGuide } from "@/lib/api";
 import GuideThumb from "@/components/GuideThumb";
+import SideRail from "@/components/SideRail";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
@@ -101,6 +102,7 @@ export default async function GuideDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <div className="xl:grid xl:grid-cols-[minmax(0,48rem)_18rem] xl:gap-8 xl:justify-center">
       <main className="max-w-3xl mx-auto px-6 py-8">
         <Link href="/guide" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
           ← 가드닝팁 목록
@@ -187,6 +189,8 @@ export default async function GuideDetailPage({ params }: Props) {
           <AdBanner dataAdSlot="6819394440" />
         </div>
       </main>
+      <SideRail excludeGuideSlug={guide.slug} />
+      </div>
     </div>
   );
 }

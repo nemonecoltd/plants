@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import AdBanner from "@/components/AdBanner";
 import ProductRecommendation, { matchProducts } from "@/components/ProductRecommendation";
 import { getAffiliateProducts, getMagazine, getMagazinePost } from "@/lib/api";
+import SideRail from "@/components/SideRail";
 
 const SITE_URL = "https://plants.nemoneai.com";
 // 2026-10-24: 색인·정본을 PLANTS 쪽으로 옮김 — PLANTS 소속 기사(맛매치 Special #6)는 여기가 주인이고,
@@ -72,6 +73,7 @@ export default async function MagazinePostPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       {owned && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+      <div className="xl:grid xl:grid-cols-[minmax(0,42rem)_18rem] xl:gap-8 xl:justify-center">
       <main className="max-w-2xl mx-auto px-6 py-8">
         <Link href="/guide/magazine" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
           ← 매거진 목록
@@ -107,6 +109,8 @@ export default async function MagazinePostPage({ params }: Props) {
           <AdBanner dataAdSlot="6819394440" />
         </div>
       </main>
+      <SideRail excludeMagazineId={post.id} />
+      </div>
     </div>
   );
 }

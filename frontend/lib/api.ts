@@ -217,9 +217,14 @@ interface DiagnosisFeedRaw {
   total: number;
 }
 
-async function fetchDiagnosisFeed(limit: number, offset = 0): Promise<DiagnosisFeedRaw> {
-  const data = await fetchApi<DiagnosisFeedRaw>(`/api/diagnoses/feed?limit=${limit}&offset=${offset}`);
+async function fetchDiagnosisFeed(limit: number, offset = 0, revalidateSec?: number): Promise<DiagnosisFeedRaw> {
+  const data = await fetchApi<DiagnosisFeedRaw>(`/api/diagnoses/feed?limit=${limit}&offset=${offset}`, revalidateSec);
   return data ?? { items: [], total: 0 };
+}
+
+// 상세 페이지 사이드 레일용 최신 진단 1건 — 페이지마다 호출되므로 5분 캐시(실시간일 필요 없음)
+export async function getLatestDiagnosis(): Promise<DiagnosisFeedItem | null> {
+  return (await fetchDiagnosisFeed(1, 0, 300)).items[0] ?? null;
 }
 
 // 홈/진단 페이지의 미리보기용 — 진단이 아무리 쌓여도 항상 최신 N개만

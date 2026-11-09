@@ -7,6 +7,7 @@ import GuideCard from "@/components/GuideCard";
 import PageFooterPromo from "@/components/PageFooterPromo";
 import { getDiagnosis, getDiagnosisFeed, getGuideTags, getGuides } from "@/lib/api";
 import type { DiagnosisStatus } from "@/lib/api";
+import SideRail from "@/components/SideRail";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -55,6 +56,7 @@ export default async function DiagnosisDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
+      <div className="xl:grid xl:grid-cols-[minmax(0,48rem)_18rem] xl:gap-8 xl:justify-center">
       <main className="max-w-3xl mx-auto px-6 py-8">
         <Link
           href="/diagnose"
@@ -166,6 +168,8 @@ export default async function DiagnosisDetailPage({ params }: Props) {
           <PageFooterPromo haystack={[diagnosis.plant_name ?? "", ...diagnosis.tags].join(" ")} />
         </section>
       </main>
+      <SideRail  />
+      </div>
     </div>
   );
 }

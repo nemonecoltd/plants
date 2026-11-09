@@ -7,6 +7,7 @@ import ProductRecommendation, { matchProducts } from "@/components/ProductRecomm
 import SaveButton from "@/components/SaveButton";
 import { getAffiliateProducts, getPlant } from "@/lib/api";
 import { getPlantImage } from "@/lib/placeholderImages";
+import SideRail from "@/components/SideRail";
 
 const SITE_URL = "https://plants.nemoneai.com";
 
@@ -158,6 +159,7 @@ export default async function PlantDetailPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
+      <div className="xl:grid xl:grid-cols-[minmax(0,48rem)_18rem] xl:gap-8 xl:justify-center">
       <main className="max-w-3xl mx-auto px-6 py-8">
         <Link href="/plants" className="inline-block text-plant-secondary text-xs no-underline hover:text-plant-primary mb-4">
           ← 전체 식물 목록
@@ -323,6 +325,8 @@ export default async function PlantDetailPage({ params }: Props) {
           </div>
         )}
       </main>
+      <SideRail  />
+      </div>
     </div>
   );
 }
