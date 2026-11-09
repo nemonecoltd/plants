@@ -74,7 +74,7 @@ export default async function MagazinePostPage({ params }: Props) {
     <div className="min-h-screen bg-[#F4F6F4]">
       {owned && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
       <div className="xl:grid xl:grid-cols-[minmax(0,42rem)_18rem] xl:gap-8 xl:justify-center">
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="w-full max-w-2xl mx-auto px-6 py-8">
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {post.image_url && (

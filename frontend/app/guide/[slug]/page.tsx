@@ -103,7 +103,7 @@ export default async function GuideDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="xl:grid xl:grid-cols-[minmax(0,48rem)_18rem] xl:gap-8 xl:justify-center">
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="w-full max-w-3xl mx-auto px-6 py-8">
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {guide.thumbnail_url && (
@@ -194,6 +194,12 @@ export default async function GuideDetailPage({ params }: Props) {
 
 // 자체 글은 마크다운을 변환한 정돈된 HTML(h2/h3/표/목록)이라 서식을 제대로 살리고,
 // 도입부 뒤에 광고를 한 번 넣는다. 수집분은 기존 렌더링(줄바꿈 보정)을 그대로 유지.
+// 농사로 원문 끝의 "※ 자세한 내용은 첨부파일을 참고하세요" 류 — 첨부파일은 우리 페이지에 없어서 가리킬 곳이 없는 문장이라 뺀다(2026-11-09, 3개 글).
+// 문장 하나(마침표까지)만 지우고 나머지 본문은 건드리지 않는다.
+function stripAttachmentNotice(html: string): string {
+  return html.replace(/※?\s*[^<>.※]*첨부\s*파일[^<>.]*\.(?:\s|&nbsp;)*/g, "");
+}
+
 function GuideBody({ html, isOriginal }: { html: string; isOriginal: boolean }) {
   const proseClass = isOriginal
     ? "text-[15px] text-gray-700 leading-[1.85] [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-plant-primary [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:text-[15px] [&_h3]:font-bold [&_h3]:text-plant-primary [&_h3]:mt-6 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4 [&_li]:mb-1.5 [&_strong]:text-plant-primary [&_a]:text-plant-primary [&_a]:underline [&_table]:w-full [&_table]:my-5 [&_table]:text-[13px] [&_th]:bg-plant-secondary/10 [&_th]:text-plant-primary [&_th]:font-bold [&_th]:p-2 [&_th]:text-left [&_th]:border [&_th]:border-gray-200 [&_td]:p-2 [&_td]:border [&_td]:border-gray-200 [&_td]:align-top"
@@ -202,7 +208,7 @@ function GuideBody({ html, isOriginal }: { html: string; isOriginal: boolean }) 
       "text-[15px] text-gray-700 leading-[1.85] break-words [&_p]:mb-3 [&_img]:rounded [&_img]:my-3 [&_img]:max-w-full [&_h4]:text-lg [&_h4]:font-bold [&_h4]:text-plant-primary [&_h4]:mt-2 [&_h4]:mb-3 [&_h5]:text-base [&_h5]:font-bold [&_h5]:text-plant-primary [&_h5]:mt-7 [&_h5]:mb-2 [&_h5]:pb-1.5 [&_h5]:border-b [&_h5]:border-plant-secondary/30 [&_h6]:text-[15px] [&_h6]:font-bold [&_h6]:text-plant-secondary [&_h6]:mt-5 [&_h6]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ul_ul]:mt-1.5 [&_ul_ul]:mb-0 [&_ul_ul]:list-[circle] [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1.5 [&_strong]:text-plant-primary [&_a]:text-plant-primary [&_a]:underline [&_table]:w-full [&_table]:my-4 [&_table]:text-[13px] [&_table]:border-collapse [&_caption]:hidden [&_th]:bg-plant-secondary/10 [&_th]:text-plant-primary [&_th]:font-bold [&_th]:p-2 [&_th]:text-left [&_th]:border [&_th]:border-gray-200 [&_td]:p-2 [&_td]:border [&_td]:border-gray-200 [&_td]:align-top [&_.tbl-type01]:overflow-x-auto";
 
   if (!isOriginal) {
-    return <div className={proseClass} dangerouslySetInnerHTML={{ __html: spaceOutGuideBody(html) }} />;
+    return <div className={proseClass} dangerouslySetInnerHTML={{ __html: stripAttachmentNotice(spaceOutGuideBody(html)) }} />;
   }
 
   const split = splitAtFirstHeading(html);

@@ -57,7 +57,7 @@ export default async function DiagnosisDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[#F4F6F4]">
       <div className="xl:grid xl:grid-cols-[minmax(0,48rem)_18rem] xl:gap-8 xl:justify-center">
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="w-full max-w-3xl mx-auto px-6 py-8">
 
         <article className={`bg-white rounded-2xl border-2 ${style.ring} overflow-hidden`}>
           {/* 사용자 사진은 백엔드가 /api/로 서빙해 next/image를 태우지 못한다(GuideThumb 설명 참고).
