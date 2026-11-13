@@ -24,6 +24,7 @@ export async function GET() {
 
 ## 계열 서비스
 - [네모네AIM](https://nemoneai.com): 미식·문화·라이프·기술 매거진
+- [산타의 칭찬카드](https://santa.nemoneai.com): MBTI·혈액형으로 받는 나만의 칭찬카드(무료)
 - [NEMONE PACE](https://now.nemoneai.com): 서울·부산·제주 팝업스토어 실시간 랭킹
 - [NEMONE MSM](https://msm.nemoneai.com): 국내 주식 AI 분석
 `;
