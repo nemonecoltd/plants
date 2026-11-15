@@ -5,7 +5,9 @@
 import { NextResponse } from "next/server";
 import { getGuides } from "@/lib/api";
 
-export const revalidate = 1800; // 30분마다 재생성 — 발행 후 네이버가 빠르게 발견하도록
+// 요청 때 만든다(force-dynamic). 예전엔 revalidate=1800이라 배포용 빌드(로컬, 백엔드 없음) 때 빈 피드가 그대로 굳어 최대 30분간 항목이 0건으로 나갔다(2026-11-16).
+// getGuides()는 자체 데이터 캐시(10분)가 있어 요청마다 DB를 치지 않고, 발행 후 네이버가 빠르게 발견하도록 응답 캐시 헤더는 30분 그대로 둔다.
+export const dynamic = "force-dynamic";
 
 const BASE = "https://plants.nemoneai.com";
 
